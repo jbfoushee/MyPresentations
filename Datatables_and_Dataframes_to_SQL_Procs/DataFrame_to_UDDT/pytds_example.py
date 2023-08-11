@@ -6,7 +6,10 @@ import datetime
 
 print("Starting...        " + str(datetime.datetime.now()))
 
-df = pd.DataFrame({'Measurement': ['F - pytds', 'G - pytds', 'H - pytds', 'I - pytds', 'J - pytds'], 'Value': [6, 7, 8, 9, 10]})
+df = pd.DataFrame(
+    {'Measurement': ['F - pytds', 'G - pytds', 'H - pytds', 'I - pytds', 'J - pytds']
+    , 'Value': [6, 7, 8, 9, 10]}
+    )
 
 tvp = pytds.TableValuedParam(
         type_name = 'dbo.Type_Measurements'
@@ -25,12 +28,19 @@ try:
 
     ## SQL-login
     ## -----------------
-    cnxn = pytds.connect(dsn='DESKTOP-VPOQODT', database="NewDatabase", user="app", password="P@$$w0rd", autocommit=True)
+    cnxn = pytds.connect(
+        dsn='DESKTOP-VPOQODT'
+        , database="NewDatabase"
+        , user="app"
+        , password="P@$$w0rd"
+        , autocommit=True)
 
     try:
         cur = cnxn.cursor()
         print("SQL Starting...    " + str(datetime.datetime.now()))
-        cur.execute('EXECUTE dbo.[usp_Measurements_Upsert] @LocationCode=%s, @dt_Measurements=%s', (4, tvp) )
+        cur.execute(
+            'EXECUTE dbo.[usp_Measurements_Upsert] @LocationCode=%s, @dt_Measurements=%s'
+            , (4, tvp) )
 
         if cnxn.autocommit == False:
             cur.commit()

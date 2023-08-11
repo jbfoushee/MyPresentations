@@ -4,7 +4,10 @@ import datetime
 
 print("Starting...        " + str(datetime.datetime.now()))
 
-df = pd.DataFrame({'Measurement': ['A - pyobdc', 'B - pyobdc', 'C - pyobdc', 'D - pyobdc', 'E - pyobdc'], 'Value': [1, 2, 3, 4, 5]})
+df = pd.DataFrame(
+    {'Measurement': ['A - pyobdc', 'B - pyobdc', 'C - pyobdc', 'D - pyobdc', 'E - pyobdc']
+    ,'Value': [1, 2, 3, 4, 5]}
+    )
 
 tvp = df.values.tolist()
 
