@@ -70,6 +70,8 @@ function SendTo-Database([System.Data.SqlClient.SqlCommand] $command)
     }
 }
 
+
+
 $measurements = @(
     @{Measurement="V - PoSH";Value="22"},
     @{Measurement="W - PoSH";Value="23"},
@@ -81,10 +83,14 @@ $measurements = @(
 $measurements.GetType()
 $measurements | Out-GridView
 
+Wait-Debugger
+
 $dt_measurements = ConvertTo-DataTable($measurements)
 
 $dt_measurements.GetType()
 $dt_measurements | Out-GridView
+
+Wait-Debugger
 
 $cmd = New-Object System.Data.SqlClient.SqlCommand
 $cmd.CommandType = [System.Data.CommandType]::StoredProcedure
