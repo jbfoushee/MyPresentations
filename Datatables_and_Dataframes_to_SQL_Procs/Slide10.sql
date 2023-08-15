@@ -1,6 +1,25 @@
 USE [NewDatabase]
 GO
 
+CREATE TABLE [dbo].[Measurements](
+	[ArbitraryID] [int] IDENTITY(1,1) NOT NULL,
+	[LocationCode] [smallint] NOT NULL,
+	[Measurement] [varchar](10) NOT NULL,
+	[Value] [int] NOT NULL,
+	[RecordDate_UTC] [datetime] NOT NULL,
+ CONSTRAINT [PK_dbo.Measurements] PRIMARY KEY CLUSTERED 
+(
+	[ArbitraryID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+ CONSTRAINT [UQ_dbo.Measurements] UNIQUE NONCLUSTERED 
+(
+	[LocationCode] ASC,
+	[Measurement] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
 CREATE TYPE [dbo].[Type_Measurements] AS TABLE(
 	[Measurement] [varchar](10) NOT NULL,
 	[Value] [int] NOT NULL,
@@ -26,68 +45,20 @@ BEGIN
 
 	BEGIN TRY
 
-		BEGIN TRAN
-
-			SELECT incoming.LocationCode AS [incoming.LocationCode]
-			  , incoming.Measurement AS [incoming.Measurement]
-			  , incoming.[Value] AS [incoming.Value]
-			  , '|' AS '|'
-			  , existing.ArbitraryID AS [existing.ArbitraryID]
-			  , existing.LocationCode AS [existing.LocationCode]
-			  , existing.Measurement AS [existing.Measurement]
-			  , existing.[Value] AS [existing.Value]
-			INTO [#temp]
-			FROM 
-				(SELECT ArbitraryID
-					, LocationCode
-					, Measurement
-					, [Value]
-				 FROM dbo.Measurements existing
-				 WHERE LocationCode = @LocationCode
-				 ) existing
-			  FULL OUTER JOIN 
-				( SELECT @LocationCode AS LocationCode
-				  , Measurement
-				  , [Value]
-				  FROM @dt_Measurements incoming
-				) incoming
-				  ON incoming.LocationCode = existing.LocationCode
-				  AND incoming.Measurement = existing.Measurement
-
-			SELECT * FROM [#temp]
-
-			DELETE dbo.Measurements
-			FROM [#temp] t
-			WHERE dbo.Measurements.ArbitraryID = t.[existing.ArbitraryID]
-			  AND t.[incoming.Measurement] IS NULL
-			  AND t.[incoming.Value] IS NULL
-
-
-			UPDATE existing
-			  SET existing.[Value] = t.[incoming.Value]
-				, existing.RecordDate_UTC = @_UTCNow
-			FROM dbo.Measurements existing
-			  INNER JOIN [#temp] t
-				 ON existing.ArbitraryID = t.[existing.ArbitraryID]
-			WHERE (
-					CONCAT(existing.[Value],'') != CONCAT(t.[incoming.Value],'')
-				-- OR other non-PK fields differ
-				  )
-
-			INSERT INTO dbo.Measurements
-				(LocationCode
-				, Measurement
-				, [Value]
-				, RecordDate_UTC
-				)
-			SELECT @LocationCode
-				, [incoming.Measurement]
-				, [incoming.Value]
-				, @_UTCNow
-			FROM [#temp]
-			WHERE [existing.ArbitraryID] IS NULL
-
-		COMMIT TRAN
+		MERGE dbo.Measurements AS tgt
+		USING @dt_Measurements AS src
+		ON (tgt.LocationCode = @LocationCode
+			AND tgt.Measurement = src.Measurement)
+		WHEN MATCHED THEN
+			UPDATE
+				SET [Value] = src.[Value]
+				, RecordDate_UTC = @_UTCNow
+		WHEN NOT MATCHED BY TARGET THEN
+			INSERT (LocationCode, Measurement, [Value], RecordDate_UTC)
+			VALUES (@LocationCode, src.Measurement, src.[Value], @_UTCNow)
+		WHEN NOT MATCHED BY SOURCE 
+				AND tgt.LocationCode = @LocationCode
+			THEN DELETE;
 
 	END TRY
 
@@ -110,6 +81,10 @@ END
 
 
 -- Now, using SSMS, go create the Database Role "MeasureProc_Executor" and assign it ability to EXECUTE proc
+/ *
+GRANT EXECUTE ON [dbo].[usp_Measurements_Upsert] TO [MeasureProc_Executor]
+*/
+
 
 DECLARE @_dt [dbo].[Type_Measurements]
 
