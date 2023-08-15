@@ -13,10 +13,10 @@ An array that needs converting to a DataTable object
     [Parameter(Position=2,ParameterSetName='NotLike')]$NotMatch=".+"
     )
     if ($NotMatch -eq ".+"){
-        $Columns = $Source[0] | Select * | Get-Member -MemberType NoteProperty | Where-Object {$_.Name -match "($Match)"}
+        $Columns = $Source[0] | Select-Object * | Get-Member -MemberType NoteProperty | Where-Object {$_.Name -match "($Match)"}
     }
     else {
-        $Columns = $Source[0] | Select * | Get-Member -MemberType NoteProperty | Where-Object {$_.Name -notmatch "($NotMatch)"}
+        $Columns = $Source[0] | Select-Object * | Get-Member -MemberType NoteProperty | Where-Object {$_.Name -notmatch "($NotMatch)"}
     }
 
     $DataTable = New-Object System.Data.DataTable
@@ -27,7 +27,7 @@ An array that needs converting to a DataTable object
     foreach ($Entry in $Source) {
         $Row = $DataTable.NewRow()
         foreach ($Column in $Columns.Name){
-            $Row["$($Column)"] = if($Entry.$Column -ne $null){($Entry | Select-Object -ExpandProperty $Column) -join ', '}else{$null}
+            $Row["$($Column)"] = if($null -ne $Entry.$Column){($Entry | Select-Object -ExpandProperty $Column) -join ', '}else{$null}
         }
         $DataTable.Rows.Add($Row)
     }
@@ -77,7 +77,7 @@ $measurements = @(
     @{Measurement="W - PoSH";Value="23"},
     @{Measurement="X - PoSH";Value="24"},
     @{Measurement="Y - PoSH";Value="25"},
-    @{Measurement="Z - PoSH";Value="26"}) | % { New-Object object | Add-Member -NotePropertyMembers $_ -PassThru }
+    @{Measurement="Z - PoSH";Value="26"}) | ForEach-Object { New-Object object | Add-Member -NotePropertyMembers $_ -PassThru }
 
 
 $measurements.GetType()
