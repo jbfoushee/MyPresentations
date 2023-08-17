@@ -77,7 +77,8 @@ $measurements = @(
     @{Measurement="W - PoSH";Value="23"},
     @{Measurement="X - PoSH";Value="24"},
     @{Measurement="Y - PoSH";Value="25"},
-    @{Measurement="Z - PoSH";Value="26"}) | ForEach-Object { New-Object object | Add-Member -NotePropertyMembers $_ -PassThru }
+    @{Measurement="Z - PoSH";Value="26"}) | ForEach-Object { 
+        New-Object object | Add-Member -NotePropertyMembers $_ -PassThru }
 
 
 $measurements.GetType()
