@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "LdB5x3QQmK6VOiKY3mGJs118igh/xvE5jyBzgGkh8UAMgVpJxxW0Qv6s2A46GEvAKan7nbWhhAbuGJxpNJNn4Q==",
+  "dgSpecHash": "8vj9sXMQb+jtPHHMDVpRA2rZUV3BCoi1qo/o3FdC0C07Ihc0WQShriTM110m72u1XA+cL5BCtQpE8so0k8qwiA==",
   "success": true,
   "projectFilePath": "C:\\CodeLouisville\\repos\\MyPresentations\\Datatables_and_Dataframes_to_SQL_Procs\\DataTable_to_UDDT\\DataTable_to_UDDT.csproj",
   "expectedPackageFiles": [
@@ -13,10 +13,10 @@
     "C:\\Users\\jbfou\\.nuget\\packages\\system.data.sqlclient\\4.8.5\\system.data.sqlclient.4.8.5.nupkg.sha512",
     "C:\\Users\\jbfou\\.nuget\\packages\\system.security.accesscontrol\\4.7.0\\system.security.accesscontrol.4.7.0.nupkg.sha512",
     "C:\\Users\\jbfou\\.nuget\\packages\\system.security.principal.windows\\4.7.0\\system.security.principal.windows.4.7.0.nupkg.sha512",
-    "C:\\Users\\jbfou\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\6.0.20\\microsoft.windowsdesktop.app.ref.6.0.20.nupkg.sha512",
-    "C:\\Users\\jbfou\\.nuget\\packages\\microsoft.netcore.app.ref\\6.0.20\\microsoft.netcore.app.ref.6.0.20.nupkg.sha512",
-    "C:\\Users\\jbfou\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\6.0.20\\microsoft.aspnetcore.app.ref.6.0.20.nupkg.sha512",
-    "C:\\Users\\jbfou\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\6.0.20\\microsoft.netcore.app.host.win-x64.6.0.20.nupkg.sha512"
+    "C:\\Users\\jbfou\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\6.0.21\\microsoft.windowsdesktop.app.ref.6.0.21.nupkg.sha512",
+    "C:\\Users\\jbfou\\.nuget\\packages\\microsoft.netcore.app.ref\\6.0.21\\microsoft.netcore.app.ref.6.0.21.nupkg.sha512",
+    "C:\\Users\\jbfou\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\6.0.21\\microsoft.aspnetcore.app.ref.6.0.21.nupkg.sha512",
+    "C:\\Users\\jbfou\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\6.0.21\\microsoft.netcore.app.host.win-x64.6.0.21.nupkg.sha512"
   ],
   "logs": []
 }
