@@ -8,12 +8,26 @@ namespace SQLSatDataTableDemo
 {
     static class Utilities
     {
-        public static DataTable ToDataTable_ver1<T>(this IList<T> list) where T : class
+        public static DataTable ToDataTable_byReflection<T>(this IList<T> list) where T : class
         {
             var dt = new DataTable();
 
             Type t = typeof(T);
-            var properties = t.GetProperties(BindingFlags.Instance | BindingFlags.Public |  BindingFlags.NonPublic);
+            var properties = t.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+            // var properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public);
+            // var properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly);
+            // var properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            // var properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            // var properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
+            // var properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly);
+            // var properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
+            // var properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+            // Learn more about BindingEnums here...
+            // https://learn.microsoft.com/en-us/dotnet/api/system.type.getproperties?view=net-7.0
+            // https://learn.microsoft.com/en-us/dotnet/api/system.reflection.bindingflags?view=net-7.0
+
 
             foreach (var property in properties)
             {
@@ -28,27 +42,7 @@ namespace SQLSatDataTableDemo
             return dt;
         }
 
-        public static void GetProperties<T>() where T : class
-        {
-            Type t = typeof(T);
-            var properties = t.GetProperties(BindingFlags.Default);
-
-            properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public);
-            properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly);
-            properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-            properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-            properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
-            properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly);
-            properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
-            properties = t.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
-
-            //https://learn.microsoft.com/en-us/dotnet/api/system.type.getproperties?view=net-7.0
-            //https://learn.microsoft.com/en-us/dotnet/api/system.reflection.bindingflags?view=net-7.0
-
-        }
-
-        public static DataTable ToDataTable_ver2(IList<clsMeasure> list)
+        public static DataTable ToDataTable_byExplicit(IList<clsMeasure> list)
         {
             var dt = new DataTable();
 
