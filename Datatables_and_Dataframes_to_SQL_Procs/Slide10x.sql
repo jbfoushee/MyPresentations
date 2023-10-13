@@ -1,3 +1,12 @@
+IF IS_SRVROLEMEMBER('sysadmin') = 0
+	BEGIN
+		RAISERROR('Run as sa!', 20, 1) WITH LOG
+	END
+
+USE [NewDatabase]
+
+GRANT EXECUTE ON dbo.Type_Measurements TO MeasureProc_Executor
+
 -- Prefix the object with "TYPE::" to work.
 -- Note this option is not available in SSMS .
 GRANT EXECUTE ON TYPE::dbo.Type_Measurements TO MeasureProc_Executor

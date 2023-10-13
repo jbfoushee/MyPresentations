@@ -1,3 +1,9 @@
+IF IS_SRVROLEMEMBER('sysadmin') = 0
+	BEGIN
+		RAISERROR('Run as sa!', 20, 1) WITH LOG
+	END
+GO
+
 USE [NewDatabase]
 GO
 
