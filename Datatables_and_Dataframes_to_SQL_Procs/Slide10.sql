@@ -36,6 +36,15 @@ CREATE TYPE [dbo].[Type_Measurements] AS TABLE(
 )
 GO
 
+-- The UDTT is scoped to the life of the batch, not the session.
+-- As soon as the batch is done, the UDTT and its data are gone.
+-- Try running lines {42 - 45}, 42 by itself, then 43 by itself
+DECLARE @_dt [dbo].[Type_Measurements]
+SELECT * FROM @_dt
+INSERT INTO @_dt (Measurement, [Value]) VALUES ('Measure1', 1)
+SELECT * FROM @_dt
+
+-- Create the proc to interact with the UDTT
 CREATE PROCEDURE [dbo].[usp_Measurements_Upsert]
 	@LocationCode smallint
 	, @dt_Measurements [dbo].[Type_Measurements] READONLY
@@ -84,17 +93,17 @@ BEGIN
 
 END
 
-
+--Test the proc with blank parameters...
+EXEC [dbo].[usp_Measurements_Upsert] @LocationCode = NULL, @dt_Measurements = NULL
 
 -- Now, using SSMS, go create the Database Role "MeasureProc_Executor" and assign it ability to EXECUTE proc
-/ *
+/*
+CREATE ROLE [MeasureProc_Executor]
+
 GRANT EXECUTE ON [dbo].[usp_Measurements_Upsert] TO [MeasureProc_Executor]
 */
 
 
-DECLARE @_dt [dbo].[Type_Measurements]
-
-EXEC [dbo].[usp_Measurements_Upsert] @LocationCode = NULL, @dt_Measurements = @_dt
 
 -- create a SQL-login named "app" (password "P@$$w0rd") and assign it the same Database Role.
 
@@ -104,4 +113,6 @@ ALTER ROLE [MeasureProc_Executor] ADD MEMBER [app]
 
 -- Generate a new session using this login/password. Can it run the proc? Why not?
 -- Can you alter the Database Role such that the "app" login can execute the proc?
--- (Continue reading the presentation to find out how)
+
+GRANT EXECUTE ON dbo.Type_Measurements TO MeasureProc_Executor
+-- Why didn't this work? (Continue reading the presentation to find out why)
