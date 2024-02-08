@@ -24,7 +24,8 @@ SELECT DISTINCT [ID] FROM [dbo].[2ColPivot]
 
 SELECT PivotResults.*
 FROM
-  ( SELECT ID, Col1 FROM [dbo].[2ColPivot]) AS RawData
+  ( SELECT ID, Col1 FROM [dbo].[2ColPivot]
+  ) AS RawData
 PIVOT
   ( SUM(Col1)
     FOR [ID] IN ([Circle], [Triangle], [Square]) 
@@ -34,7 +35,8 @@ PIVOT
 --the same statement, but attempting to retreive the RawData dataset
 SELECT PivotResults.*, RawData.*
 FROM
-  ( SELECT ID, Col1 FROM [dbo].[2ColPivot]) AS RawData
+  ( SELECT ID, Col1 FROM [dbo].[2ColPivot]
+  ) AS RawData
 PIVOT
   ( SUM(Col1)
     FOR [ID] IN ([Circle], [Triangle], [Square]) 
@@ -52,7 +54,9 @@ PIVOT
 
 
 --the same statement with an explicit order; Intellisense
-SELECT PivotResults.Circle, PivotResults.Triangle, PivotResults.[Square]
+SELECT PivotResults.Circle
+	, PivotResults.Triangle
+	, PivotResults.[Square]
 FROM
   ( SELECT ID, Col1 FROM [dbo].[2ColPivot]
     WHERE ID IN ('Circle', 'Triangle', 'Square')
@@ -64,7 +68,9 @@ PIVOT
 
 
 -- the Square data is requested in the RawData section and pivoted, but not in the SELECT statement
-SELECT PivotResults.Circle, PivotResults.Triangle --, PivotResults.[Square]
+SELECT PivotResults.Circle
+	, PivotResults.Triangle
+	--, PivotResults.[Square]
 FROM
   ( SELECT ID, Col1 FROM [dbo].[2ColPivot] 
     WHERE ID IN ('Circle', 'Triangle', 'Square')
@@ -108,7 +114,7 @@ FROM
   ) AS RawData
 PIVOT
   ( SUM(Col1)
-    FOR [ID] IN ([Circle], [Triangle], [Hexagon], [Square]) -- introduced a new shape
+    FOR [ID] IN ([Circle], [Triangle], [Square], [Hexagon] ) -- introduced a new shape
   ) AS PivotResults
 
 --add some data and re-run above statement

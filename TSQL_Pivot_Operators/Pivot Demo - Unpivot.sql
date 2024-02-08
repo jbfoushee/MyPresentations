@@ -25,14 +25,15 @@ FROM (
     , Convert(char(3),Col2) AS Col2
     , Convert(char(3),Col3) AS Col3
     , Convert(char(3),Col4) AS Col4
-FROM dbo.[Unpivot] 
+  FROM dbo.[Unpivot] 
   ) AS RawData
 UNPIVOT (
   PropertyValue
   FOR PropertyName IN (Col1, Col2, Col3, Col4)
  ) AS UnpivotResults
 
---this fails because  the datatype of Col1 cannot handle the data of Col4
+--this fails because the datatype of Col1 cannot handle the data of Col4
+-- What happens if you remove Col4 from the FOR-IN clause?
 SELECT UnpivotResults.*
 FROM (
   SELECT ID
