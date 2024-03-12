@@ -38,7 +38,7 @@ FROM
   ( SELECT ID, Col1 FROM [dbo].[2ColPivot]
   ) AS RawData
 PIVOT
-  ( SUM(Col1)
+  ( SUM(IsNull(Col1,12))
     FOR [ID] IN ([Circle], [Triangle], [Square]) 
   ) AS PivotResults
 

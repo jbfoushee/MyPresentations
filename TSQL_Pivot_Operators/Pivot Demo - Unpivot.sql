@@ -73,8 +73,8 @@ SELECT UnpivotResults.*
 FROM (
   SELECT ID
     , Convert(char(3),Col1) AS Col1
-    , IsNull(Convert(char(3),Col2),'{}') AS Col2
-    , IsNull(Convert(char(3),Col3),'{}') AS Col3
+    , IsNull(Convert(char(3),Col2),'NULL') AS Col2
+    , IsNull(Convert(char(3),Col3),'NULL') AS Col3
     , Convert(char(3),Col4) AS Col4
    FROM dbo.[Unpivot] 
   ) AS RawData
