@@ -66,7 +66,7 @@ PIVOT
 UNION ALL
   SELECT 'ALL' AS StoreID, PivotResults.* 
   FROM
-  ( SELECT [Year], Sales --StoreID is missing from this predicate
+  ( SELECT [Year], Sales --StoreID is missing b/c we want all stores
     FROM [dbo].[3ColPivot]
   ) AS RawData
   PIVOT
@@ -97,14 +97,15 @@ PIVOT
 --- A 4-column pivot?
 ------------------------------------------
 
--- Be careful adding unnecessary data, one additional column can change results
+-- Be careful adding unnecessary data...
+-- one additional column can change results
 
 SELECT PivotResults.*
 FROM 
 ( SELECT StoreID
   , CONVERT(char(4), [Year]) + ' Q' + CONVERT(char(2), [Quarter]) AS Quarter_Text
   , Sales
-  , [DataEnteredBy]  --by adding this column, the result pivot becomes almost unreadable
+  , [DataEnteredBy]  -- column that was added
   FROM [dbo].[3ColPivot]
 ) AS RawData
 PIVOT

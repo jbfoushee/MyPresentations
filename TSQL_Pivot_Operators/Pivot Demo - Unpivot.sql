@@ -83,3 +83,5 @@ UNPIVOT (
   FOR PropertyName
   IN (Col1, Col2, Col3, Col4)
  ) AS UnpivotResults
+
+--Why does the alternate text look funny?

@@ -38,7 +38,7 @@ WHILE @_count < 70000
 		VALUES(@_json)
 	END
 
--- Turn on Actual Execution Plan
+-- Turn on Actual Execution Plan (Cntl+M)
 
 SELECT * 
 FROM dbo.Persons
@@ -73,7 +73,7 @@ DROP INDEX [IX_dbo.Persons__JsonData] ON [dbo].[Persons]
 
 ALTER TABLE dbo.Persons 
  ADD  name  
-   AS JSON_VALUE([JsonData],'$.name') PERSISTED 
+   AS JSON_VALUE([JsonData],'$.name') 
 
 -- and an index on that computed column
 
@@ -88,11 +88,49 @@ SELECT *
 FROM dbo.Persons
 WHERE JSON_VALUE(JsonData, '$.name') = 'Jeff Foushee'
 
+SELECT *
+FROM dbo.Persons
+WHERE [name] = 'Jeff Foushee'
+
+-- That index could get big, what if we redefine it smaller?
+DROP INDEX [IX_dbo.Persons__name] ON [dbo].[Persons]
+
+ALTER TABLE dbo.Persons 
+ DROP COLUMN [name]  
+
+ALTER TABLE dbo.Persons 
+ ADD [name]
+   AS Convert(varchar(200), JSON_VALUE([JsonData],'$.name')) 
+
+CREATE NONCLUSTERED INDEX [IX_dbo.Persons__name] ON [dbo].[Persons]
+(
+	[name] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+
+-- What happens to the SELECT queries?
+
+SELECT *
+FROM dbo.Persons
+WHERE JSON_VALUE(JsonData, '$.name') = 'Jeff Foushee'
+
+SELECT *
+FROM dbo.Persons
+WHERE Convert(varchar(200), JSON_VALUE(JsonData, '$.name')) = 'Jeff Foushee'
+
+SELECT *
+FROM dbo.Persons
+WHERE [name] = 'Jeff Foushee'
+
+
 -- But if we want to search by last name, this index is not effective
 
 SELECT *
 FROM dbo.Persons
 WHERE JSON_VALUE(JsonData, '$.name') LIKE '%Foushee%'
+
+SELECT *
+FROM dbo.Persons
+WHERE [name] LIKE '%Foushee%'
 
 
 -- Add a computed column (show manually for nuances)
@@ -103,7 +141,7 @@ ALTER TABLE dbo.Persons
 		, RIGHT(JSON_VALUE([JsonData],'$.name')
              , LEN(JSON_VALUE([JsonData],'$.name'))
 			    - CHARINDEX(' ',JSON_VALUE([JsonData],'$.name')) 
-			)) PERSISTED 
+			)) 
 
 -- Build index on last_name
 
@@ -113,6 +151,10 @@ CREATE NONCLUSTERED INDEX [IX_dbo.Persons__last_name] ON [dbo].[Persons]
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 
 -- Did anything change?
+
+SELECT *
+FROM dbo.Persons
+WHERE JSON_VALUE(JsonData, '$.name') LIKE '%Foushee%'
 
 SELECT *
 FROM dbo.Persons
