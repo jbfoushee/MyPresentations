@@ -1,4 +1,4 @@
-USE [PivotDemo]
+ USE [PivotDemo]
 
 CREATE TABLE [dbo].[2ColPivot]
 (
@@ -38,7 +38,7 @@ FROM
   ( SELECT ID, Col1 FROM [dbo].[2ColPivot]
   ) AS RawData
 PIVOT
-  ( SUM(IsNull(Col1,12))
+  ( SUM(Col1)
     FOR [ID] IN ([Circle], [Triangle], [Square]) 
   ) AS PivotResults
 
@@ -54,9 +54,7 @@ PIVOT
 
 
 --the same statement with an explicit order; Intellisense
-SELECT PivotResults.Circle
-	, PivotResults.Triangle
-	, PivotResults.[Square]
+SELECT PivotResults.*
 FROM
   ( SELECT ID, Col1 FROM [dbo].[2ColPivot]
     WHERE ID IN ('Circle', 'Triangle', 'Square')
