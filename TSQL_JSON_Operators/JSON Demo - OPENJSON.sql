@@ -51,6 +51,8 @@ FROM #json t
 -- If I want to break down more JSON,
 -- I CROSS APPLY the next object downstream
 
+-- **** (take a pic of this dataset for later) ****
+
 SELECT t.ArbitaryID
 	, t.json_col
 	, '|' AS '|'
@@ -100,7 +102,7 @@ FROM #json t
     CROSS APPLY OPENJSON(j.[value], '$') k
 WHERE j.[key] = 'parents'
 
---What happens if I remove the WHERE clause now?
+--What happens if I remove (comment) the WHERE clause now?
 
 --------------------------------------------
 --Add another row to the table
