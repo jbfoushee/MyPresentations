@@ -1,7 +1,23 @@
+CREATE TABLE [dbo].[BigJsonAsOneRow](
+	[ArbitraryID] [int] IDENTITY (1,1) NOT NULL,
+	[LongJson] [nvarchar](max) NOT NULL
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[BigJsonAsOneRow] WITH CHECK 
+  ADD CONSTRAINT [chk_dbo.BigJsonAsOneRow_JsonCheck] 
+    CHECK (ISJSON([LongJson]) = 1)
+GO
+
+INSERT INTO [dbo].[BigJsonAsOneRow] ([LongJson])
+VALUES ('
+-- Content of https://microsoftedge.github.io/Demos/json-dummy-data/64KB.json
+')
+
+
 --Review some truncated JSON
 
 SELECT [ArbitraryID]
-	,[LongJson]
+	, [LongJson]
 	, ISJSON([LongJson]) AS [IsJson]
 	, LEN([LongJson]) AS [Length]
 FROM [JsonDemo].[dbo].[BigJsonAsOneRow]
