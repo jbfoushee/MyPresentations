@@ -16,12 +16,13 @@ VALUES
   , ('Triangle', 0)
   , ('Triangle', 6)
 
----------------------------------------------------------------------------------------------
-
+---------------------------------------------------------------------------
 SELECT * FROM [dbo].[2ColPivot]
 
+---------------------------------------------------------------------------
 SELECT DISTINCT [ID] FROM [dbo].[2ColPivot] 
 
+---------------------------------------------------------------------------
 SELECT PivotResults.*
 FROM
   ( SELECT ID, Col1 FROM [dbo].[2ColPivot]
@@ -32,6 +33,18 @@ PIVOT
                 -- ^       ^        ^   the values from the DISTINCT query above
   ) AS PivotResults
 
+---------------------------------------------------------------------------
+-- trying to use a sub-SELECT, errors
+SELECT PivotResults.*
+FROM
+  ( SELECT ID, Col1 FROM [dbo].[2ColPivot]
+  ) AS RawData
+PIVOT
+  ( SUM(Col1)
+    FOR [ID] IN ( SELECT DISTINCT [ID] FROM [dbo].[2ColPivot] ) 
+  ) AS PivotResults
+
+---------------------------------------------------------------------------
 --the same statement, but attempting to retreive the RawData dataset
 SELECT PivotResults.*, RawData.*
 FROM
@@ -42,7 +55,7 @@ PIVOT
     FOR [ID] IN ([Circle], [Triangle], [Square]) 
   ) AS PivotResults
 
-
+---------------------------------------------------------------------------
 --the same statement with the FOR [ID] clause re-ordered
 SELECT PivotResults.*
 FROM
@@ -52,7 +65,7 @@ PIVOT
     FOR [ID] IN ([Square], [Circle], [Triangle]) -- re-ordered list
   ) AS PivotResults
 
-
+---------------------------------------------------------------------------
 --the same statement with an explicit order; Intellisense
 SELECT PivotResults.Circle
 	, PivotResults.Triangle
@@ -66,8 +79,10 @@ PIVOT
     FOR [ID] IN ([Circle], [Triangle], [Square])
   ) AS PivotResults
 
+---------------------------------------------------------------------------
+-- the Square data is requested in the RawData section and pivoted,
+-- but not in the SELECT statement
 
--- the Square data is requested in the RawData section and pivoted, but not in the SELECT statement
 SELECT PivotResults.Circle
 	, PivotResults.Triangle
 	--, PivotResults.[Square]
@@ -80,8 +95,9 @@ PIVOT
     FOR [ID] IN ([Circle], [Triangle], [Square])
   ) AS PivotResults
 
-
+---------------------------------------------------------------------------
 -- the Square data is requested in the RawData section, but not pivoted
+
 SELECT PivotResults.*
 FROM
   ( SELECT ID, Col1 FROM [dbo].[2ColPivot] 
@@ -92,8 +108,9 @@ PIVOT
     FOR [ID] IN ([Circle], [Triangle])	-- but Square is not pivoted
   ) AS PivotResults
 
-
+---------------------------------------------------------------------------
 -- the RawData is filtered to avoid Square data
+
 SELECT PivotResults.*
 FROM
   ( SELECT ID, Col1 FROM [dbo].[2ColPivot] 
@@ -104,10 +121,9 @@ PIVOT
     FOR [ID] IN ([Circle], [Triangle], [Square])
   ) AS PivotResults
 
-
-
-
+---------------------------------------------------------------------------
 --the same statement with a new unmentioned shape
+
 SELECT PivotResults.*
 FROM
   ( SELECT ID, Col1 FROM [dbo].[2ColPivot]
