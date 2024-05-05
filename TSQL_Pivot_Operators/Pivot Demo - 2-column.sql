@@ -54,7 +54,9 @@ PIVOT
 
 
 --the same statement with an explicit order; Intellisense
-SELECT PivotResults.*
+SELECT PivotResults.Circle
+	, PivotResults.Triangle
+	, PivotResults.[Square]
 FROM
   ( SELECT ID, Col1 FROM [dbo].[2ColPivot]
     WHERE ID IN ('Circle', 'Triangle', 'Square')

@@ -24,6 +24,21 @@ SET @_VTCNames = STUFF(
 
 SELECT @_VTCNames
 
+-- Could I use this variable in the PIVOT clause?
+
+SELECT PivotResults.*
+FROM (
+     SELECT StoreID, [Year], Sales 
+     FROM [dbo].[3ColPivot] 
+) AS RawData
+PIVOT (
+  SUM(Sales)
+  FOR [Year]
+  IN ( @_VTCNames )
+ ) AS PivotResults
+ORDER BY 1 ASC;
+
+-- No, because the IN-clause does not accept variables
 
 ----------------------------------------------------
 
