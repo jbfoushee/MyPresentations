@@ -33,7 +33,7 @@ FROM OPENJSON(t.json_col) j
 
 SELECT t.json_col, j.*
 FROM #json t
-  CROSS APPLY OPENJSON(json_col, '$') j
+  CROSS APPLY OPENJSON(t.json_col, '$') j
 
 --------------------------------------------
 -- We select from the table and CROSS APPLY the json column
@@ -99,7 +99,7 @@ SELECT t.ArbitaryID
     , JSON_VALUE(k.[value], '$.name') AS '$.name'
 FROM #json t
   CROSS APPLY OPENJSON(json_col, '$') j
-    CROSS APPLY OPENJSON(j.[value], '$') k
+    CROSS APPLY OPENJSON(j.[value], '$') k  --this line changed
 WHERE j.[key] = 'parents'
 
 --What happens if I remove (comment) the WHERE clause now?
@@ -225,7 +225,7 @@ SELECT t.ArbitaryID
 	, '|' AS '|'
 	, l.[key]
     , l.[value] AS [l.value]
-	, JSON_VALUE(l.[value], '$.name') AS '$.name'
+	, JSON_VALUE(l.[value], '$.name') AS '$.name'  --added
 FROM #json t
   CROSS APPLY OPENJSON(json_col, '$') j
     CROSS APPLY OPENJSON(j.[value], '$') k
