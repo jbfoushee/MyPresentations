@@ -7,8 +7,8 @@ CREATE TABLE [dbo].[Table1](
 GO
 
 ALTER TABLE [dbo].[Table1]  WITH CHECK 
-	ADD CONSTRAINT [chk_dbo.Table1_JsonData__IsJson] -- <-- constraint name is thrown 
-		CHECK ( ISJSON([JsonData]) = 1 )             --          on data error
+	ADD CONSTRAINT [chk_dbo.Table1_JsonData__IsJson] -- <-- constraint name is  
+		CHECK ( ISJSON([JsonData]) = 1 )             --    thrown on data error
 GO
 
 ALTER TABLE [dbo].[Table1]  WITH CHECK 

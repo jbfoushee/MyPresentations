@@ -12,8 +12,13 @@ DECLARE @_json nvarchar(4000) = N'
    , "" : "this too"
 }'
 
+SELECT @_json
+-- What happens to the dog emoji if you declare @_json 
+-- as varchar instead of nvarchar?
+
 -- The N' is the preserve the Unicode
 SELECT JSON_VALUE(@_json, N'$."🐶"')      -- Bayly
+-- What happens if you remove the "N'" from the previous line?
 
 SELECT JSON_VALUE(@_json, '$."*~@#$%^&*()_+=><?/"') -- is a valid json
 SELECT JSON_VALUE(@_json, '$.""')      -- this too
