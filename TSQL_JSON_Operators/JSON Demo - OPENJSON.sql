@@ -27,10 +27,6 @@ FROM #json
 SELECT t.json_col
 FROM #json t
 
-SELECT j.
-FROM OPENJSON(t.json_col) j
-     FROM #json t
-
 SELECT *
 FROM #json t
   CROSS APPLY OPENJSON(t.json_col, '$') j
