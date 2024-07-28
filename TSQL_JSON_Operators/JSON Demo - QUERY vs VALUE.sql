@@ -68,6 +68,6 @@ PIVOT
   FOR [Function] IN ([JSON_QUERY], [JSON_VALUE])
 ) PivotResults
 
--- Change "Ann Onymous" to NULL. What happens?
+-- Change "Ann Onymous" to null (lower-case, no quotes). What happens?
 -- Can you tell a difference between a legit NULL value,
 -- and a illegit NULL value (called by the wrong function usage)?

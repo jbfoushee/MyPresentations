@@ -4,7 +4,7 @@ CREATE TABLE [dbo].[BigJsonAsOneRow](
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
 ALTER TABLE [dbo].[BigJsonAsOneRow] WITH CHECK 
-  ADD CONSTRAINT [chk_dbo.BigJsonAsOneRow_JsonCheck] 
+  ADD CONSTRAINT [chk_dbo.BigJsonAsOneRow__IsJson] 
     CHECK (ISJSON([LongJson]) = 1)
 GO
 
