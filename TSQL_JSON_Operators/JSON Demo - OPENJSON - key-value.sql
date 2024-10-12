@@ -5,10 +5,6 @@ DECLARE @_json varchar(8000) = '
    , "json_expert":false
 }'
 
-SELECT j.[key] AS [j.key]
-    , j.[value] AS  [j.value]
-FROM OPENJSON(@_json, '$') j
-
 CREATE TABLE #json
 ( ArbitraryID int IDENTITY(1,1) NOT NULL
   , json_col varchar(8000) NOT NULL
@@ -24,15 +20,16 @@ FROM #json
 
 --------------------------------------------
 -- How do I query the json column?
-SELECT t.json_col
-FROM #json t
 
-SELECT *
+-- Normal CROSS APPLY
+SELECT t.*
+	, '|' AS '|'
+	, j.*
 FROM #json t
   CROSS APPLY OPENJSON(t.json_col, '$') j
 
 --------------------------------------------
--- We select from the table and CROSS APPLY the json column
+-- Put a label on all the columns
 
 SELECT t.ArbitraryID AS [t.ArbitraryID]
 	, t.json_col AS [t.json_col]
@@ -41,7 +38,9 @@ SELECT t.ArbitraryID AS [t.ArbitraryID]
     , j.[value] AS [j.value]
 	, j.[type] AS [j.type]
 FROM #json t
-  CROSS APPLY OPENJSON(json_col, '$') j
+  CROSS APPLY OPENJSON(t.json_col, '$') j
+
+-- and select only the JSON-based ones
 
 SELECT -- t.ArbitraryID AS [t.ArbitraryID]
 	-- , t.json_col AS [t.json_col]
@@ -50,7 +49,7 @@ SELECT -- t.ArbitraryID AS [t.ArbitraryID]
     , j.[value] AS [j.value]
 	, j.[type] AS [j.type]
 FROM #json t
-  CROSS APPLY OPENJSON(json_col, '$') j
+  CROSS APPLY OPENJSON(t.json_col, '$') j
 
 --------------------------------------------
 -- If I want to break down more JSON,
@@ -68,8 +67,8 @@ SELECT t.ArbitraryID
     , k.[value] AS [k.value]
     , JSON_VALUE(k.[value], '$.name') AS '$.name'
 FROM #json t
-  CROSS APPLY OPENJSON(json_col, '$') j
-    CROSS APPLY OPENJSON(json_col, '$.parents') k
+  CROSS APPLY OPENJSON(t.json_col, '$') j
+    CROSS APPLY OPENJSON(t.json_col, '$.parents') k
 
 --------------------------------------------
 -- The break-down of parents only applies to the "parents"
@@ -85,13 +84,14 @@ SELECT t.ArbitraryID
     , k.[value] AS [k.value]
     , JSON_VALUE(k.[value], '$.name') AS '$.name'
 FROM #json t
-  CROSS APPLY OPENJSON(json_col, '$') j
-    CROSS APPLY OPENJSON(json_col, '$.parents') k
+  CROSS APPLY OPENJSON(t.json_col, '$') j
+    CROSS APPLY OPENJSON(t.json_col, '$.parents') k
 WHERE j.[key] = 'parents'
 
 --------------------------------------------
 -- And rather than OPENJSON the entire json each time,
 -- I will create a dependency between the CROSS APPLY statements
+-- (There will be no change in output)
 
 SELECT t.ArbitraryID
 	, t.json_col
@@ -103,13 +103,13 @@ SELECT t.ArbitraryID
     , k.[value] AS [k.value]
     , JSON_VALUE(k.[value], '$.name') AS '$.name'
 FROM #json t
-  CROSS APPLY OPENJSON(json_col, '$') j
+  CROSS APPLY OPENJSON(t.json_col, '$') j
     CROSS APPLY OPENJSON(j.[value], '$') k  --this line changed
 WHERE j.[key] = 'parents'
 
 --What happens if I remove (comment) the WHERE clause now?
 --Review the pic of the earlier dataset;
---How would OPENJSON react to a value that isn't JSON?
+--Hint: How would OPENJSON react to a value that isn't a JSON object/array?
 
 --------------------------------------------
 --Add another row to the table
@@ -139,12 +139,14 @@ SELECT t.ArbitraryID
     , k.[value] AS [k.value]
     , JSON_VALUE(k.[value], '$.name') AS '$.name'
 FROM #json t
-  CROSS APPLY OPENJSON(json_col, '$') j
+  CROSS APPLY OPENJSON(t.json_col, '$') j
     CROSS APPLY OPENJSON(j.[value], '$') k
 WHERE j.[key] = 'parents'
 
+-- Yes!
+
 ---------------------------------------------
--- Change the 2 rows into 1 row with an array-based JSON
+-- Change the 2 rows into a one-row array-based JSON
 
 DELETE FROM #json
 
@@ -175,11 +177,12 @@ SELECT t.ArbitraryID
     , k.[value] AS [k.value]
     , JSON_VALUE(k.[value], '$.name') AS '$.name'
 FROM #json t
-  CROSS APPLY OPENJSON(json_col, '$') j
+  CROSS APPLY OPENJSON(t.json_col, '$') j
     CROSS APPLY OPENJSON(j.[value], '$') k
 WHERE j.[key] = 'parents'
 
--- No, because all the data shifted down one indentation
+-- It 'works', but we get no data 
+-- because all the data shifted down one indentation
 
 --------------------------------------------------
 
@@ -192,7 +195,7 @@ SELECT t.ArbitraryID
 	, k.[key] AS [k.key]
     , k.[value] AS [k.value]
 FROM #json t
-  CROSS APPLY OPENJSON(json_col, '$') j
+  CROSS APPLY OPENJSON(t.json_col, '$') j
     CROSS APPLY OPENJSON(j.[value], '$') k
 
 -- For one, j.key is now an integer
@@ -202,7 +205,7 @@ FROM #json t
 -- the indentation-shift, filter on k.key being "parents"
 
 SELECT t.ArbitraryID
-	, t.json_col
+	--, t.json_col
 	, '|' AS '|'
     , j.[key] AS [j.key]
     , j.[value] AS  [j.value]
@@ -213,7 +216,7 @@ SELECT t.ArbitraryID
 	, l.[key]
     , l.[value] AS [l.value]
 FROM #json t
-  CROSS APPLY OPENJSON(json_col, '$') j
+  CROSS APPLY OPENJSON(t.json_col, '$') j
     CROSS APPLY OPENJSON(j.[value], '$') k
 	   CROSS APPLY OPENJSON(k.[value], '$') l
 WHERE k.[key] = 'parents'
@@ -222,7 +225,7 @@ WHERE k.[key] = 'parents'
 -- Now we have the query we want
 
 SELECT t.ArbitraryID
-	, t.json_col
+	--, t.json_col
 	, '|' AS '|'
     , j.[key] AS [j.key]
     , j.[value] AS  [j.value]
@@ -234,7 +237,7 @@ SELECT t.ArbitraryID
     , l.[value] AS [l.value]
 	, JSON_VALUE(l.[value], '$.name') AS '$.name'  --added
 FROM #json t
-  CROSS APPLY OPENJSON(json_col, '$') j
+  CROSS APPLY OPENJSON(t.json_col, '$') j
     CROSS APPLY OPENJSON(j.[value], '$') k
 	   CROSS APPLY OPENJSON(k.[value], '$') l
 WHERE k.[key] = 'parents'
@@ -245,7 +248,7 @@ WHERE k.[key] = 'parents'
 -- referenced json_col again?
 
 SELECT t.ArbitraryID
-	, t.json_col
+	--, t.json_col
 	, '|' AS '|'
     , j.[key] AS [j.key]
     , j.[value] AS  [j.value]
@@ -257,9 +260,9 @@ SELECT t.ArbitraryID
     , l.[value] AS [l.value]
 	, JSON_VALUE(l.[value], '$.name') AS '$.name'
 FROM #json t
-  CROSS APPLY OPENJSON(json_col, '$') j
-    CROSS APPLY OPENJSON(json_col, '$') k
-	   CROSS APPLY OPENJSON(json_col, '$') l
+  CROSS APPLY OPENJSON(t.json_col, '$') j
+    CROSS APPLY OPENJSON(t.json_col, '$') k
+	  CROSS APPLY OPENJSON(t.json_col, '$') l
 WHERE k.[key] = 'parents'
 
 -- Comment out   WHERE k.[key] = 'parents'

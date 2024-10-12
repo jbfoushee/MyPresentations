@@ -5,6 +5,7 @@ CREATE TABLE #temp
 
 -- Sample data from https://microsoftedge.github.io/Demos/json-dummy-data/64KB.json
 
+--This data has been pre-indented
 INSERT INTO #temp (json_data)
 VALUES
  ( '{
@@ -14,6 +15,7 @@ VALUES
         "bio": "Donec lobortis eleifend condimentum. Cras dictum dolor lacinia lectus vehicula rutrum. Maecenas quis nisi nunc. Nam tristique feugiat est vitae mollis. Maecenas quis nisi nunc.",
         "version": 6.1
     }')
+--This data has been deliberately un-indented
 INSERT INTO #temp (json_data)
 VALUES
  ( '{"name": "Afzal Ghaffar","language": "Sindhi","id": "ENTOCR13RSCLZ6KU","bio": "Aliquam sollicitudin ante ligula, eget malesuada nibh efficitur et. Pellentesque massa sem, scelerisque sit amet odio id, cursus tempor urna. Etiam congue dignissim volutpat. Vestibulum pharetra libero et velit gravida euismod.","version": 1.88 }'
@@ -26,25 +28,25 @@ VALUES
 --Both rows as text
 SELECT * FROM #temp
 
---The row loaded pretty-printed
+--Selecting the row originally loaded pretty-printed
 SELECT json_data 
 FROM #temp
 WHERE ID = (SELECT MIN(ID) FROM #temp)
 FOR JSON AUTO
 
---The row loaded as one-liner
+--Selecting the row originally loaded un-indented
 SELECT json_data 
 FROM #temp
 WHERE ID = (SELECT MAX(ID) FROM #temp)
 FOR JSON AUTO
 
---The row loaded pretty-printed
+--Selecting the row originally loaded pretty-printed (notice it came back indented)
 SELECT JSON_QUERY(json_data, '$') AS [value]
 FROM #temp
 WHERE ID = (SELECT MIN(ID) FROM #temp)
 FOR JSON AUTO
 
---The row loaded as one-liner
+--Selecting the row originally loaded un-indented
 SELECT JSON_QUERY(json_data, '$') AS [value]
 FROM #temp
 WHERE ID = (SELECT MAX(ID) FROM #temp)
