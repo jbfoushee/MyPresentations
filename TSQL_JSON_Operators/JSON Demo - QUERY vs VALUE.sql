@@ -4,7 +4,6 @@ DECLARE @_json varchar(8000) = '
    , "parents":[{"name":"Mom"},{"name":"Dad"}]
    , "json_expert":false
    , "spouse_name":"Ann Onymous" 
-   , "children":[]
 }'
 
 
@@ -16,7 +15,6 @@ DECLARE @_json varchar(8000) = '
 	UNION SELECT 'JSON_VALUE', '$.parents[1].name', JSON_VALUE(@_json, '$.parents[1].name')
 	UNION SELECT 'JSON_VALUE', '$.json_expert', JSON_VALUE(@_json, '$.json_expert')
 	UNION SELECT 'JSON_VALUE', '$.spouse_name', JSON_VALUE(@_json, '$.spouse_name')
-	UNION SELECT 'JSON_VALUE', '$.children', JSON_VALUE(@_json, '$.children')
 
 	UNION SELECT 'JSON_QUERY', '$', JSON_QUERY(@_json, '$')
 	UNION SELECT 'JSON_QUERY', '$.parents', JSON_QUERY(@_json, '$.parents')
@@ -26,7 +24,6 @@ DECLARE @_json varchar(8000) = '
 	UNION SELECT 'JSON_QUERY', '$.parents[1].name', JSON_QUERY(@_json, '$.parents[1].name')
 	UNION SELECT 'JSON_QUERY', '$.json_expert', JSON_QUERY(@_json, '$.json_expert')
 	UNION SELECT 'JSON_QUERY', '$.spouse_name', JSON_QUERY(@_json, '$.spouse_name')
-	UNION SELECT 'JSON_QUERY', '$.children', JSON_QUERY(@_json, '$.children')
 
 ---------------------------------------------------------------------
 -- PIVOT the results..
@@ -37,7 +34,6 @@ DECLARE @_json varchar(8000) = '
    , "parents":[{"name":"Mom"},{"name":"Dad"}]
    , "json_expert":false
    , "spouse_name":"Ann Onymous" 
-   , "children":[]
 }'
 
 SELECT PivotResults.*
@@ -51,7 +47,6 @@ FROM
 	UNION SELECT 'JSON_VALUE', '$.parents[1].name', JSON_VALUE(@_json, '$.parents[1].name')
 	UNION SELECT 'JSON_VALUE', '$.json_expert', JSON_VALUE(@_json, '$.json_expert')
 	UNION SELECT 'JSON_VALUE', '$.spouse_name', JSON_VALUE(@_json, '$.spouse_name')
-	UNION SELECT 'JSON_VALUE', '$.children', JSON_VALUE(@_json, '$.children')
 
 	UNION SELECT 'JSON_QUERY', '$', JSON_QUERY(@_json, '$')
 	UNION SELECT 'JSON_QUERY', '$.parents', JSON_QUERY(@_json, '$.parents')
@@ -61,7 +56,6 @@ FROM
 	UNION SELECT 'JSON_QUERY', '$.parents[1].name', JSON_QUERY(@_json, '$.parents[1].name')
 	UNION SELECT 'JSON_QUERY', '$.json_expert', JSON_QUERY(@_json, '$.json_expert')
 	UNION SELECT 'JSON_QUERY', '$.spouse_name', JSON_QUERY(@_json, '$.spouse_name')
-	UNION SELECT 'JSON_QUERY', '$.children', JSON_QUERY(@_json, '$.children')
 ) RawData
 PIVOT
 ( MAX([Value])
@@ -69,5 +63,5 @@ PIVOT
 ) PivotResults
 
 -- Change "Ann Onymous" to null (lower-case, no quotes). What happens?
--- Can you tell a difference between a legit NULL value,
+-- Can you tell a difference between a legit NULL value (no value exists),
 -- and a illegit NULL value (called by the wrong function usage)?
