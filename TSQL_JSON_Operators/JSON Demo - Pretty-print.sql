@@ -25,16 +25,16 @@ VALUES
 -- Try switching between "Results To Text," "Results To Grid" and "Results To File"
 -- For "Results to Grid," copy the resulting table to Notepad
 
---Both rows as text
+--Both rows in a dataset
 SELECT * FROM #temp
 
---Selecting the row originally loaded pretty-printed
+--Isolating the row originally loaded pretty-printed
 SELECT json_data 
 FROM #temp
 WHERE ID = (SELECT MIN(ID) FROM #temp)
 FOR JSON AUTO
 
---Selecting the row originally loaded un-indented
+--Isolating the row originally loaded un-indented
 SELECT json_data 
 FROM #temp
 WHERE ID = (SELECT MAX(ID) FROM #temp)
@@ -55,3 +55,6 @@ FOR JSON AUTO
 -- It seems it has a lot to do with how it was initially loaded!
 -- But consider, this is merely a display issue and does not interfere
 -- with the processing of the JSON object model
+
+-- Now DROP the table and change the json_data datatype in line 3
+-- from nvarchar to json. Now what happens?
