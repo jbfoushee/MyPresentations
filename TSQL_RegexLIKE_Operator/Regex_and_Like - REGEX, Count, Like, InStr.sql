@@ -2,26 +2,38 @@
 -- REGEX demo: REGEXP_COUNT, REGEXP_LIKE, REGEXP_INSTR
 --------------------------------------------------------------------
 
-IF NOT EXISTS (SELECT 1 FROM sys.objects
-                WHERE object_id = OBJECT_ID(N'[dbo].[Employees]')
-                AND type IN (N'U'))
-	BEGIN
-		CREATE TABLE dbo.Employees (
-            ID INT IDENTITY(101,1),
-            [Name] VARCHAR(150),
-            Email VARCHAR(320),
-            Phone_Number VARCHAR(20)
-        );
+-- Setup:
 
-        INSERT INTO dbo.Employees ([Name], Email, Phone_Number) 
-        VALUES ('John Doe', 'john@contoso.com', '123-456-7890')
-            , ('Alice Smith', 'alice@fabrikam.com', '234-567-8901')
-            , ('Bob Johnson', 'bob@fabrikam.net','345-678-9012')
-            , ('Eve Jones', 'eve@contoso.com', '456-789-0123')
-            , ('Charlie Brown', 'charlie@contoso.co.in', '567-890-124');
-
-        -- Hint: Go to Edit, Intellisense, Refresh Local Cache
+IF EXISTS (SELECT 1
+            FROM sys.databases 
+            WHERE name = DB_NAME()
+              AND compatibility_level < 170)
+    BEGIN
+        DECLARE @_ErrMessage varchar(8000) = 
+           CONCAT('Compatibility level too low for expected results.', CHAR(13), CHAR(13)
+                   , 'Run "ALTER DATABASE [', DB_NAME(), '] SET COMPATIBILITY_LEVEL = 170;')
+        RAISERROR(@_ErrMessage, 16, 1)
     END
+
+
+IF EXISTS (SELECT 1 FROM sys.objects
+           WHERE object_id = OBJECT_ID(N'[dbo].[Employees]')
+             AND type IN (N'U'))
+    DROP TABLE dbo.Employees
+	
+CREATE TABLE dbo.Employees (
+    ID INT IDENTITY(101,1),
+    [Name] VARCHAR(150),
+    Email VARCHAR(320),
+    Phone_Number VARCHAR(20)
+);
+
+INSERT INTO dbo.Employees ([Name], Email, Phone_Number) 
+VALUES ('John Doe', 'john@contoso.com', '123-456-7890')
+    , ('Alice Smith', 'alice@fabrikam.com', '234-567-8901')
+    , ('Bob Johnson', 'bob@fabrikam.net','345-678-9012')
+    , ('Eve Jones', 'eve@contoso.com', '456-789-0123')
+    , ('Charlie Brown', 'charlie@contoso.co.in', '567-890-124');
 
 
 --------------------------------------------------------------------
@@ -32,23 +44,19 @@ IF NOT EXISTS (SELECT 1 FROM sys.objects
 -- matches within a string
 --------------------------------------------------------------------
 
--- This is the old way to do this, with REPLACE and LEN
+-- Together:
 
-DECLARE @_find varchar(255) = 'in'
-DECLARE @_inside varchar(255) = 'interesting'
+    DECLARE @_find varchar(255) = 'in'
+    DECLARE @_inside varchar(255) = 'interesting'
 
-SELECT @_inside AS original
-  , @_find AS [find_this]
-  , LEN(@_inside) AS [LEN(original)]
-  , REPLACE(@_inside, @_find, '') AS [replaced]
-  , LEN(REPLACE(@_inside, @_find, '')) AS [LEN(replaced)]
-  , (LEN(@_inside) - LEN(REPLACE(@_inside, @_find, ''))) / LEN(@_find) AS [Count]
+    SELECT @_inside AS original
+      , @_find AS [find_this]
+      , (LEN(@_inside) - LEN(REPLACE(@_inside, @_find, ''))) / LEN(@_find) 
+             AS [Count_w/LEN_&_REPLACE]
 
--- And the new way.. although literals are boring...
-
-SELECT @_inside AS original
-  , @_find AS [find_this]
-  , REGEXP_COUNT(@_inside,@_find) AS [Count]
+      , REGEXP_COUNT(@_inside,@_find) AS [Count_w/REGEXP_COUNT]
+    
+    --Literals are boring! Let's see some symbols!
 
 -- So let's introduce some RegEx. Find all the vowels...
 
@@ -68,27 +76,29 @@ FROM dbo.Employees
 -- Determines if a string matches a regular expression.
 --------------------------------------------------------------------
 
+--Together: 
+    SELECT ID, Phone_Number
+    FROM dbo.Employees
+    WHERE Phone_Number LIKE '456-%'
 
-SELECT ID, Phone_Number
-FROM dbo.Employees
-WHERE Phone_Number LIKE '456-%'
+    SELECT ID, Phone_Number 
+    FROM dbo.Employees 
+    WHERE REGEXP_LIKE(Phone_Number, '^456-')
 
-SELECT ID, Phone_Number 
-FROM dbo.Employees 
-WHERE REGEXP_LIKE(Phone_Number, '^456-')
+    -- Did the REGEXP_LIKE function fail?
+    -- Run this: ALTER DATABASE [DatabaseName] SET COMPATIBILITY_LEVEL = 170;
 
+--Together:
+    SELECT ID, Phone_Number
+    FROM dbo.Employees
+    WHERE Phone_Number 
+        LIKE '[0-9][0-9][0-9]-[0-9][0-9][0-9]-9012'
+      OR Phone_Number 
+        LIKE '[0-9][0-9][0-9]-[0-9][0-9][0-9]-0123'
 
-SELECT ID, Phone_Number
-FROM dbo.Employees
-WHERE Phone_Number 
-    LIKE '[0-9][0-9][0-9]-[0-9][0-9][0-9]-9012'
-  OR Phone_Number 
-    LIKE '[0-9][0-9][0-9]-[0-9][0-9][0-9]-0123'
-
-SELECT ID, Phone_Number 
-FROM dbo.Employees 
-WHERE REGEXP_LIKE(Phone_Number
-   , '^\d{3}-\d{3}-(9012|0123)$')
+    SELECT ID, Phone_Number 
+    FROM dbo.Employees 
+    WHERE REGEXP_LIKE(Phone_Number, '^\d{3}-\d{3}-(9012|0123)$')
 
 
 
@@ -105,9 +115,11 @@ ALTER TABLE dbo.Employees
   ADD CONSTRAINT Phone_Validation
      CHECK ( REGEXP_LIKE(Phone_Number, '^\d{3}-\d{3}-\d{4}$') )
 
+
 UPDATE dbo.Employees
 SET Phone_Number = '000-000-0000'
 WHERE NOT REGEXP_LIKE(Phone_Number, '\d{3}-\d{3}-\d{4}')
+
 
 ALTER TABLE dbo.Employees
   ADD CONSTRAINT Phone_Validation
@@ -120,9 +132,10 @@ ALTER TABLE dbo.Employees
 --     [,return_option = 0 [,flags = 'c']]]] )
 
 
--- From the starting position of some string, returns the 
--- starting/ending position (based on return_option), of 
--- the nᵗʰ occurrence of a Regex pattern.
+-- From the starting position of some string, find 
+-- the nᵗʰ occurrence of a Regex pattern, and return 
+-- its starting/ending position (based on return_option).
+
 --------------------------------------------------------------------
 SELECT Email
   , REGEXP_INSTR(email,'@' , 1, 1, 0) AS [1st_At]

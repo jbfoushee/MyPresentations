@@ -2,39 +2,40 @@
 -- REGEX demo: REGEXP_REPLACE, REGEXP_SUBSTR
 --------------------------------------------------------------------
 
-IF NOT EXISTS (SELECT 1 FROM sys.objects
-                WHERE object_id = OBJECT_ID(N'[dbo].[Employees]')
-                AND type IN (N'U'))
-	BEGIN
-		CREATE TABLE dbo.Employees (
-            ID INT IDENTITY(101,1),
-            [Name] VARCHAR(150),
-            Email VARCHAR(320),
-            Phone_Number VARCHAR(20)
-        );
+-- Setup:
 
-        INSERT INTO dbo.Employees ([Name], Email, Phone_Number) 
-        VALUES ('John Doe', 'john@contoso.com', '123-456-7890')
-            , ('Alice Smith', 'alice@fabrikam.com', '234-567-8901')
-            , ('Bob Johnson', 'bob@fabrikam.net','345-678-9012')
-            , ('Eve Jones', 'eve@contoso.com', '456-789-0123')
-            , ('Charlie Brown', 'charlie@contoso.co.in', '567-890-124');
-
-        -- Hint: Go to Edit, Intellisense, Refresh Local Cache
-    END
-
-IF EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
-            WHERE TABLE_SCHEMA = 'dbo'
-                AND TABLE_NAME = 'Employees'
-                AND CONSTRAINT_TYPE = 'CHECK'
-                AND CONSTRAINT_NAME = 'Phone_Validation')
+IF EXISTS (SELECT 1
+            FROM sys.databases 
+            WHERE name = DB_NAME()
+              AND compatibility_level < 170)
     BEGIN
-        ALTER TABLE [dbo].[Employees] DROP CONSTRAINT [Phone_Validation]
-
-        UPDATE dbo.Employees 
-        SET Phone_Number = '567-890-124'
-        WHERE [Name] = 'Charlie Brown'
+        DECLARE @_ErrMessage varchar(8000) = 
+           CONCAT('Compatibility level too low for expected results.', CHAR(13), CHAR(13)
+                   , 'Run "ALTER DATABASE [', DB_NAME(), '] SET COMPATIBILITY_LEVEL = 170;')
+        RAISERROR(@_ErrMessage, 16, 1)
     END
+
+
+IF EXISTS (SELECT 1 FROM sys.objects
+           WHERE object_id = OBJECT_ID(N'[dbo].[Employees]')
+             AND type IN (N'U'))
+    DROP TABLE dbo.Employees
+
+CREATE TABLE dbo.Employees (
+    ID INT IDENTITY(101,1),
+    [Name] VARCHAR(150),
+    Email VARCHAR(320),
+    Phone_Number VARCHAR(20)
+);
+
+INSERT INTO dbo.Employees ([Name], Email, Phone_Number) 
+VALUES ('John Doe', 'john@contoso.com', '123-456-7890')
+    , ('Alice Smith', 'alice@fabrikam.com', '234-567-8901')
+    , ('Bob Johnson', 'bob@fabrikam.net','345-678-9012')
+    , ('Eve Jones', 'eve@contoso.com', '456-789-0123')
+    , ('Charlie Brown', 'charlie@contoso.co.in', '567-890-124');
+
+-- Hint: Go to Edit, Intellisense, Refresh Local Cache
 
 
 
@@ -85,8 +86,20 @@ FROM Employees
 
 
 SELECT Email
-  , REGEXP_SUBSTR(email, '@.+$'  , 1, 1, 'c', 0) AS Suffix_Ver1
-  , REGEXP_SUBSTR(email, '@(.+)$', 1, 1, 'c', 0) AS Suffix_Ver2
-  , REGEXP_SUBSTR(email, '@(.+)$', 1, 1, 'c', 1) AS Domain
+    , RIGHT(email, LEN(email) - CHARINDEX('@', email)) 
+            AS [Domain_w/RIGHT_&_LEN_&_CHARINDEX]
+
+    , REGEXP_SUBSTR(email, '@(.+)$', 1, 1, 'c', 1) 
+            AS [Domain_w/REGEXP_SUBSTR]
 FROM Employees
 
+
+DECLARE @_text VARCHAR(500) 
+  = '1: 2023-08-01, 2: 2024-09-01, 3: 10/01/2025';
+--      YYYY-MM-DD     YYYY-MM-DD     MM/DD/YYYY
+--                                      ^ Hold my beer
+
+SELECT 
+  REGEXP_SUBSTR(@_text, '1: ([0-9]{4})-([0-9]{2})-([0-9]{2})', 1, 1, 'i', 1) AS Month1
+, REGEXP_SUBSTR(@_text, '2: ([0-9]{4})-([0-9]{2})-([0-9]{2})', 1, 1, 'i', 1) AS Month2
+, REGEXP_SUBSTR(@_text, '3: ([0-9]{2})/([0-9]{2})/([0-9]{4})', 1, 1, 'i', 3) AS Month3
