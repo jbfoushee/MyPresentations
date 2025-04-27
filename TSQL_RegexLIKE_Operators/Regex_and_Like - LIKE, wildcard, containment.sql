@@ -73,22 +73,27 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Table_1)
 -- The underscore ( _ ) character is a wildcard of one character
 --------------------------------------------------------------------
 
+-- Return anything with exactly only/one character
 SELECT TOP 4 * 
 FROM dbo.Table_1
-WHERE [value] LIKE '_'  -- guarantees only/one character
+WHERE [value] LIKE '_'
 ORDER BY NEWID() -- randomizer
 
 
+-- Return anything with exactly only/two characters
 SELECT TOP 4 * 
 FROM dbo.Table_1
-WHERE [value] LIKE '__'  -- guarantees only/two characters
+WHERE [value] LIKE '__'
 ORDER BY NEWID() -- randomizer
 
 
+-- Return anything with at least two characters
 SELECT TOP 4 * 
 FROM dbo.Table_1
-WHERE [value] LIKE '__%'  -- guarantees at least two characters
+WHERE [value] LIKE '__%'  -- guarantees 
 ORDER BY NEWID() -- randomizer
+
+
 
 --------------------------------------------------------------------
 -- Brackets ( [] ) are an array of allowable characters
@@ -145,10 +150,12 @@ WHERE [value] LIKE '[[ab][cd]][f]'
 
 -- So if the table contained these values, it would have returned them:
 SELECT *
-FROM ( VALUES ('[c]f')
-   , ('ac]f')
-   , ('bc]f')
-   , ('[d]f')
-   , ('ad]f')
-   , ('bd]f')) t([value])
+FROM ( 
+	VALUES ('[c]f')
+	     , ('ac]f')
+	     , ('bc]f')
+	     , ('[d]f')
+	     , ('ad]f')
+	     , ('bd]f')
+   ) t([value])
 WHERE [value] LIKE '[[ab][cd]][f]'
