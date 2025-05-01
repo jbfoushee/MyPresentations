@@ -66,7 +66,9 @@ SELECT * FROM dbo.Employees
 SELECT [Name] 
  , REGEXP_COUNT([Name],'[AEIOU]') AS [UpperVowelCount_1]
  , REGEXP_COUNT([Name],'[AEIOU]',1,'c') AS [UpperVowelCount_2]
- , '|' AS '|'
+
+ , '|' AS '|' -- case-sensitive above, case-insensitive below...
+ 
  , REGEXP_COUNT([Name],'[AEIOU]',1,'i')  AS [AnyVowelCount_1] 
  , REGEXP_COUNT([Name],'[AaEeIiOoUu]')   AS [AnyVowelCount_2]
  , REGEXP_COUNT(UPPER([Name]),'[AEIOU]') AS [AnyVowelCount_3]

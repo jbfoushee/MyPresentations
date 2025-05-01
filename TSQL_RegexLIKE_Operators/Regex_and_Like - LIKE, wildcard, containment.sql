@@ -2,15 +2,18 @@
 -- LIKE demo: wildcards and containment
 --------------------------------------------------------------------
 
-IF NOT EXISTS (
+IF EXISTS (
     SELECT 1 FROM INFORMATION_SCHEMA.TABLES 
     WHERE TABLE_SCHEMA = 'dbo' 
     AND TABLE_NAME = 'Table_1'
-)
-	CREATE TABLE dbo.Table_1
-	( ArbitraryID int IDENTITY(1,1) NOT NULL
-	  , [value] varchar(3)
 	)
+	DROP TABLE dbo.Table_1
+
+
+CREATE TABLE dbo.Table_1
+( ArbitraryID int IDENTITY(1,1) NOT NULL
+	, [value] varchar(3)
+)
 
 SET NOCOUNT ON
 DECLARE @_value0 smallint = NULL
@@ -69,6 +72,11 @@ IF NOT EXISTS (SELECT 1 FROM dbo.Table_1)
 
 	END
 
+SELECT * FROM dbo.Table_1
+
+SELECT * FROM dbo.Table_1
+WHERE [value] LIKE '%'
+
 --------------------------------------------------------------------
 -- The underscore ( _ ) character is a wildcard of one character
 --------------------------------------------------------------------
@@ -122,17 +130,19 @@ SELECT * FROM dbo.Table_1
 WHERE [value] LIKE '[%]'
 
 
+-- We can use multiple sets of containment characters...
+
 SELECT * FROM dbo.Table_1
 WHERE ArbitraryID LIKE '%[2%]9[86][90]'
-
-
--- Brackets also lose their special containment character
--- ability within containment characters.
 
 
 SELECT * FROM dbo.Table_1
 WHERE [value] LIKE '[[ab][cd]][f]'
 --No results? What happened?
+
+
+-- Brackets also lose their special containment character
+-- ability within containment characters.
 
 
 -- [[ab][cd]][f]
