@@ -24,9 +24,9 @@ FROM #json
 -- Normal CROSS APPLY
 SELECT t.*
 	, '|' AS '|'
-	, j.*
+	, ca.*
 FROM #json t
-  CROSS APPLY OPENJSON(t.json_col, '$') j
+  CROSS APPLY OPENJSON(t.json_col, '$') ca
 
 --------------------------------------------
 -- Put a label on all the columns
@@ -34,22 +34,22 @@ FROM #json t
 SELECT t.ArbitraryID AS [t.ArbitraryID]
 	, t.json_col AS [t.json_col]
 	, '|' AS '|'
-	, j.[key] AS [j.key]
-    , j.[value] AS [j.value]
-	, j.[type] AS [j.type]
+	, ca.[key] AS [ca.key]
+    , ca.[value] AS [ca.value]
+	, ca.[type] AS [ca.type]
 FROM #json t
-  CROSS APPLY OPENJSON(t.json_col, '$') j
+  CROSS APPLY OPENJSON(t.json_col, '$') ca
 
 -- and select only the JSON-based ones
 
 SELECT -- t.ArbitraryID AS [t.ArbitraryID]
 	-- , t.json_col AS [t.json_col]
 	-- , '|' AS '|'
-	 j.[key] AS [j.key]
-    , j.[value] AS [j.value]
-	, j.[type] AS [j.type]
+	 ca.[key] AS [ca.key]
+    , ca.[value] AS [ca.value]
+	, ca.[type] AS [ca.type]
 FROM #json t
-  CROSS APPLY OPENJSON(t.json_col, '$') j
+  CROSS APPLY OPENJSON(t.json_col, '$') ca
 
 --------------------------------------------
 -- If I want to break down more JSON,
@@ -104,12 +104,17 @@ SELECT t.ArbitraryID
     , JSON_VALUE(k.[value], '$.name') AS '$.name'
 FROM #json t
   CROSS APPLY OPENJSON(t.json_col, '$') j
-    CROSS APPLY OPENJSON(j.[value], '$') k  --this line changed
+    CROSS APPLY OPENJSON(j.[value], '$') k  
+					--   ^^^^^^^^^  my 'root' starts here now
 WHERE j.[key] = 'parents'
 
 --What happens if I remove (comment) the WHERE clause now?
 --Review the pic of the earlier dataset;
---Hint: How would OPENJSON react to a value that isn't a JSON object/array?
+--Hint 1: How would OPENJSON react to a value that isn't a JSON object/array?
+--Hint 2: Too bad CROSS APPLY doesn't ON+AND like JOIN. What if you replace 
+		WHERE j.[key] = 'parents'
+--   with
+		WHERE ISJSON(j.[value]) = 1
 
 --------------------------------------------
 --Add another row to the table
@@ -242,28 +247,3 @@ FROM #json t
 	   CROSS APPLY OPENJSON(k.[value], '$') l
 WHERE k.[key] = 'parents'
 
---------------------------------------------------
--- What would happen if we didn't form a relationship
--- between the CROSS APPLY statements? If every one
--- referenced json_col again?
-
-SELECT t.ArbitraryID
-	--, t.json_col
-	, '|' AS '|'
-    , j.[key] AS [j.key]
-    , j.[value] AS  [j.value]
-    , '|' AS '|'
-	, k.[key]
-    , k.[value] AS [k.value]
-	, '|' AS '|'
-	, l.[key]
-    , l.[value] AS [l.value]
-	, JSON_VALUE(l.[value], '$.name') AS '$.name'
-FROM #json t
-  CROSS APPLY OPENJSON(t.json_col, '$') j
-    CROSS APPLY OPENJSON(t.json_col, '$') k
-	  CROSS APPLY OPENJSON(t.json_col, '$') l
-WHERE k.[key] = 'parents'
-
--- Comment out   WHERE k.[key] = 'parents'
--- Now what happens?

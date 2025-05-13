@@ -20,7 +20,7 @@ SELECT [ArbitraryID]
 	, [LongJson]
 	, ISJSON([LongJson]) AS [IsJson]
 	, LEN([LongJson]) AS [Length]
-FROM [JsonDemo].[dbo].[BigJsonAsOneRow]
+FROM [dbo].[BigJsonAsOneRow]
 
 -- Show them again under "Results as Text"
 
@@ -28,10 +28,10 @@ FROM [JsonDemo].[dbo].[BigJsonAsOneRow]
 -- Rebuild the original JSON using FOR JSON AUTO
 
 SELECT [LongJson]
-FROM [JsonDemo].[dbo].[BigJsonAsOneRow]
+FROM [dbo].[BigJsonAsOneRow]
 
 SELECT JSON_QUERY(LongJson, '$') AS [value]
-FROM [JsonDemo].[dbo].[BigJsonAsOneRow]
+FROM [dbo].[BigJsonAsOneRow]
 FOR JSON AUTO, WITHOUT_ARRAY_WRAPPER
 
 ------------------------------------------------
@@ -39,5 +39,5 @@ FOR JSON AUTO, WITHOUT_ARRAY_WRAPPER
 -- will get wrapped-up into the JSON results
 
 SELECT ArbitraryID, JSON_QUERY(LongJson, '$') AS [value]
-FROM [JsonDemo].[dbo].[BigJsonAsOneRow]
+FROM [dbo].[BigJsonAsOneRow]
 FOR JSON AUTO, WITHOUT_ARRAY_WRAPPER
