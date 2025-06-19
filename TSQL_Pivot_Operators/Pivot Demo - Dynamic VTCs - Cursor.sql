@@ -1,4 +1,4 @@
-SELECT DISTINCT Year FROM dbo.[3ColPivot]
+SELECT DISTINCT [Year] FROM dbo.[3ColPivot]
 ----------------------------------------------------
 
 DECLARE @_VTCNames varchar(MAX); SET @_VTCNames = ''
