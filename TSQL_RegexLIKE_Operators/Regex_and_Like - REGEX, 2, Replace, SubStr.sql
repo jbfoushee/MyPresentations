@@ -100,6 +100,9 @@ DECLARE @_text VARCHAR(500)
 --                                      ^ Hold my beer
 
 SELECT 
-  REGEXP_SUBSTR(@_text, '1: ([0-9]{4})-([0-9]{2})-([0-9]{2})', 1, 1, 'i', 1) AS Month1
-, REGEXP_SUBSTR(@_text, '2: ([0-9]{4})-([0-9]{2})-([0-9]{2})', 1, 1, 'i', 1) AS Month2
-, REGEXP_SUBSTR(@_text, '3: ([0-9]{2})/([0-9]{2})/([0-9]{4})', 1, 1, 'i', 3) AS Month3
+  REGEXP_SUBSTR(@_text
+    , '1: ([0-9]{4})-([0-9]{2})-([0-9]{2})', 1, 1, 'i', 1) AS Month1,
+  REGEXP_SUBSTR(@_text
+    , '2: ([0-9]{4})-([0-9]{2})-([0-9]{2})', 1, 1, 'i', 1) AS Month2,
+  REGEXP_SUBSTR(@_text
+    , '3: ([0-9]{2})/([0-9]{2})/([0-9]{4})', 1, 1, 'i', 3) AS Month3

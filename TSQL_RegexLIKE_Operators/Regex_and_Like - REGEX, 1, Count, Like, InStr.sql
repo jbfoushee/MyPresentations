@@ -112,16 +112,19 @@ SELECT Phone_Number
   END AS isValid   
 FROM Employees
 
+-- Enlist a table constraint to prevent bad data from coming in
 
 ALTER TABLE dbo.Employees
   ADD CONSTRAINT Phone_Validation
      CHECK ( REGEXP_LIKE(Phone_Number, '^\d{3}-\d{3}-\d{4}$') )
 
+-- Whoops, we have bad data already in there. Let's "correct" that first
 
 UPDATE dbo.Employees
 SET Phone_Number = '000-000-0000'
 WHERE NOT REGEXP_LIKE(Phone_Number, '\d{3}-\d{3}-\d{4}')
 
+-- Enlist a table constraint to prevent future bad data from coming in
 
 ALTER TABLE dbo.Employees
   ADD CONSTRAINT Phone_Validation
@@ -140,8 +143,8 @@ ALTER TABLE dbo.Employees
 
 --------------------------------------------------------------------
 SELECT Email
-  , REGEXP_INSTR(email,'@' , 1, 1, 0) AS [1st_At]
+  , REGEXP_INSTR(email,'@' , 1, 1, 0) AS [1st_@_Start]
   , REGEXP_INSTR(email,'co', 1, 2, 0) AS [2nd_co_Start]
   , REGEXP_INSTR(email,'co', 1, 2, 1) AS [2nd_co_End]
-  , REGEXP_INSTR(email,'\.', 1, 2, 0) AS [2nd_Period]
+  , REGEXP_INSTR(email,'\.', 1, 2, 0) AS [2nd_._Start]
 FROM Employees
