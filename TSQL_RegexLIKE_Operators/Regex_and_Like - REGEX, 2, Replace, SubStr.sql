@@ -44,8 +44,9 @@ SELECT * FROM dbo.Employees
 --    ( string, RegExPtrn, withPattern
 --        [, startPos = 1 [, occurrence = 0 [, flags = 'c']]] )
 
--- Returns an in-string replacement of one regular expression 
--- pattern, with another regular expression pattern.
+-- Returns an in-string replacement of one regular 
+-- expression pattern, with another regular expression 
+-- pattern.
 --------------------------------------------------------------------
 
 SELECT Phone_Number  
@@ -55,7 +56,8 @@ SELECT Phone_Number
 FROM Employees
 
 
--- Same query, but with sub-expressions walled-off... and unused
+-- Same query, but with sub-expressions walled-off... 
+-- and unused
 SELECT Phone_Number  
    , REGEXP_REPLACE
         ( Phone_Number, '(\d{3})-(\d{3})-(\d{4})' , 'Valid. Trust me, bro' ) 
@@ -101,8 +103,11 @@ DECLARE @_text VARCHAR(500)
 
 SELECT 
   REGEXP_SUBSTR(@_text
-    , '1: ([0-9]{4})-([0-9]{2})-([0-9]{2})', 1, 1, 'i', 1) AS Month1,
+    , '1: ([0-9]{4})-([0-9]{2})-([0-9]{2})', 1, 1, 'i', 1) 
+    AS Month1,
   REGEXP_SUBSTR(@_text
-    , '2: ([0-9]{4})-([0-9]{2})-([0-9]{2})', 1, 1, 'i', 1) AS Month2,
+    , '2: ([0-9]{4})-([0-9]{2})-([0-9]{2})', 1, 1, 'i', 1) 
+    AS Month2,
   REGEXP_SUBSTR(@_text
-    , '3: ([0-9]{2})/([0-9]{2})/([0-9]{4})', 1, 1, 'i', 3) AS Month3
+    , '3: ([0-9]{2})/([0-9]{2})/([0-9]{4})', 1, 1, 'i', 3) 
+    AS Month3

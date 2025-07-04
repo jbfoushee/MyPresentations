@@ -78,7 +78,8 @@ SELECT * FROM dbo.Table_1
 WHERE [value] LIKE '%'
 
 --------------------------------------------------------------------
--- The underscore ( _ ) character is a wildcard of one character
+-- The underscore ( _ ) character is a wildcard of 
+-- one character
 --------------------------------------------------------------------
 
 -- Return anything with exactly only/one character
@@ -116,15 +117,16 @@ IF @_value LIKE '[]'
 ELSE 
    PRINT 'no, `` NOT LIKE []'
 
--- An 'ablaut' is a change of vowel in related words or forms.
--- Here we are selecting one such where the first letter is 'm'
--- and the last is 'd'
+-- An 'ablaut' is a change of vowel in related words or 
+-- forms.
+-- Here we are selecting one such where the first letter 
+-- is 'm' and the last is 'd'
 
 SELECT * FROM dbo.Table_1
 WHERE [value] LIKE 'm[aeiou]d'
 
--- The % character loses its special wildcard ability within
--- the containment characters
+-- The % character loses its special wildcard ability 
+-- within the containment characters
 
 SELECT * FROM dbo.Table_1
 WHERE [value] LIKE '[%]'
@@ -158,7 +160,8 @@ WHERE [value] LIKE '[[ab][cd]][f]'
 -- Bracket 8 ended the containment started at 7
 
 
--- So if the table contained these values, it would have returned them:
+-- So if the table contained these values, it would have 
+-- returned them:
 SELECT *
 FROM ( 
 	VALUES ('[c]f')

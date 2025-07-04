@@ -19,9 +19,9 @@ IF EXISTS (SELECT 1
 -- REGEXP_MATCHES 
 --    ( string, RegExPtrn [, flags = 'c'] )
 
--- Returns a table of metadata for every occurrence of Regex 
--- pattern found within string.Nothing may be returned if no 
--- pattern-matches exist.
+-- Returns a table of metadata for every occurrence 
+-- of Regex pattern found within string.Nothing may 
+-- be returned if no pattern-matches exist.
 --------------------------------------------------------------------
 
 SELECT *
@@ -37,13 +37,14 @@ FROM REGEXP_MATCHES
 -- REGEXP_SPLIT_TO_TABLE 
 --    ( string, RegExPtrn [, flags = 'c'] )
 
--- Returns a table of metadata, each entry delimited from the 
--- original string by the pattern. Everything will be returned 
--- in one row if the delimiter pattern is not found.
+-- Returns a table of metadata, each entry 
+-- delimited from the original string by the 
+-- pattern. Everything will be returned in one 
+-- row if the delimiter pattern is not found.
 --------------------------------------------------------------------
 
--- A statement that uses all letters of the alphabet 
--- is a "pangram."
+-- A statement that uses all letters of the 
+-- alphabet is a "pangram."
 SELECT *
 FROM REGEXP_SPLIT_TO_TABLE
   ('the quick brown fox jumps over the lazy dog', '\s+');
@@ -51,3 +52,4 @@ FROM REGEXP_SPLIT_TO_TABLE
 SELECT *
 FROM REGEXP_SPLIT_TO_TABLE
   ('the quick brown fox jumps over the lazy dog', '!');
+

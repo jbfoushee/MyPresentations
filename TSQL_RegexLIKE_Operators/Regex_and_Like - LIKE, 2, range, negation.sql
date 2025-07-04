@@ -12,9 +12,10 @@ IF NOT EXISTS (
 
 SET NOCOUNT ON
 --------------------------------------------------------------------
--- The dash ( - ) character is a range of characters from its
--- immediate left to its immediate right
--- Characters must be contiguous; Lower value must be on the left
+-- The dash ( - ) character is a range of characters 
+-- from its immediate left to its immediate right
+-- Characters must be contiguous; Lower value must 
+-- be on the left
 --------------------------------------------------------------------
 
 SELECT * FROM dbo.Table_1
@@ -78,16 +79,21 @@ SELECT * FROM dbo.Table_1
 WHERE [ArbitraryID] NOT LIKE '[4]'
 
 
--- a two-digit number; First digit 2, the second NOT a 4, 6, or 7
+-- a two-digit number; First digit 2, 
+-- the second NOT a 4, 6, or 7
 SELECT * FROM dbo.Table_1
-WHERE [ArbitraryID] LIKE '2[^467]'  -- the caret is the first character
+WHERE [ArbitraryID] LIKE '2[^467]'  
+       -- the caret is the first character
 
 
--- a two-digit number; First digit 2, the second can be a 4, ^, 6, or 7
+-- a two-digit number; First digit 2,
+-- the second can be a 4, ^, 6, or 7
 SELECT * FROM dbo.Table_1
-WHERE [ArbitraryID] LIKE '2[4^67]'  -- the caret is NOT the first character
+WHERE [ArbitraryID] LIKE '2[4^67]'  
+        -- the caret is NOT the first character
 
 
--- a two-character word; First character "a", second character NOT a thru v
+-- a two-character word; First character "a",
+-- second character NOT a thru v
 SELECT * FROM dbo.Table_1
 WHERE [value] LIKE 'a[^a-v]'

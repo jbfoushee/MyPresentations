@@ -43,8 +43,8 @@ SELECT * FROM dbo.Employees
 -- REGEXP_COUNT
 --    ( string, RegExPtrn [,startPos = 1 [,flags = 'c']] )
 
--- Returns the number of times a regular-expression pattern 
--- matches within a string
+-- Returns the number of times a regular-expression 
+-- pattern matches within a string
 --------------------------------------------------------------------
 
 -- Together:
@@ -112,19 +112,22 @@ SELECT Phone_Number
   END AS isValid   
 FROM Employees
 
--- Enlist a table constraint to prevent bad data from coming in
+-- Enlist a table constraint to prevent bad data 
+-- from coming in
 
 ALTER TABLE dbo.Employees
   ADD CONSTRAINT Phone_Validation
      CHECK ( REGEXP_LIKE(Phone_Number, '^\d{3}-\d{3}-\d{4}$') )
 
--- Whoops, we have bad data already in there. Let's "correct" that first
+-- Whoops, we have bad data already in there. 
+-- Let's "correct" that first
 
 UPDATE dbo.Employees
 SET Phone_Number = '000-000-0000'
 WHERE NOT REGEXP_LIKE(Phone_Number, '\d{3}-\d{3}-\d{4}')
 
--- Enlist a table constraint to prevent future bad data from coming in
+-- Enlist a table constraint to prevent future 
+-- bad data from coming in
 
 ALTER TABLE dbo.Employees
   ADD CONSTRAINT Phone_Validation
@@ -139,7 +142,8 @@ ALTER TABLE dbo.Employees
 
 -- From the starting position of some string, find 
 -- the nᵗʰ occurrence of a Regex pattern, and return 
--- its starting/ending position (based on return_option).
+-- its starting/ending position (based on 
+-- return_option).
 
 --------------------------------------------------------------------
 SELECT Email
