@@ -10,7 +10,7 @@ GO
 
 INSERT INTO [dbo].[BigJsonAsOneRow] ([LongJson])
 VALUES ('
--- Content of https://microsoftedge.github.io/Demos/json-dummy-data/64KB.json
+-- Content of https://microsoftedge.github.io/Demos/json-dummy-data/128KB.json
 ')
 
 
