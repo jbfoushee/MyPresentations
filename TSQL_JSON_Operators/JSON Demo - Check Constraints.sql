@@ -1,3 +1,9 @@
+SELECT @@VERSION AS Instance_Version
+	, name AS [DB_Name]
+	, compatibility_level AS [DB_Compatibility]
+FROM sys.databases
+WHERE database_id = DB_ID()
+
 -- Create the table and add the three constraints we discussed
 
 CREATE TABLE [dbo].[Table1](
@@ -7,9 +13,9 @@ CREATE TABLE [dbo].[Table1](
 GO
 
 ALTER TABLE [dbo].[Table1]  WITH CHECK 
-	ADD CONSTRAINT [chk_dbo.Table1_JsonData__IsJson] -- <-- constraint name is  
-		CHECK ( ISJSON([JsonData]) = 1 )             --    thrown on data error
-GO
+	ADD CONSTRAINT [chk_dbo.Table1_JsonData__IsJson] -- <-- constraint
+		CHECK ( ISJSON([JsonData]) = 1 )             --  name is thrown
+GO                                                   --  on data error
 
 ALTER TABLE [dbo].[Table1]  WITH CHECK 
 	ADD CONSTRAINT [chk_dbo.Table1_JsonData__name.Exists] 

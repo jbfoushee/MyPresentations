@@ -170,6 +170,9 @@ DECLARE @_json varchar(8000) = '
 
 INSERT INTO #json VALUES (@_json)
 
+--------------------------------------------
+SELECT * FROM #json
+
 --------------------------------------------------
 -- Does our original CROSS APPLY statement work?
 
@@ -227,7 +230,7 @@ FROM #json t
 WHERE k.[key] = 'parents'
 
 -----------------------------------------------
--- Now we have the query we want
+-- It works again, let's extract the parents' names
 
 SELECT t.ArbitraryID
 	--, t.json_col
