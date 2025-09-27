@@ -5,6 +5,8 @@ DECLARE @_json varchar(8000) = '
    , "json_expert":false
 }'
 
+SELECT * FROM OPENJSON(@_json)
+
 CREATE TABLE #json
 ( ArbitraryID int IDENTITY(1,1) NOT NULL
   , json_col varchar(8000) NOT NULL
@@ -20,6 +22,20 @@ FROM #json
 
 --------------------------------------------
 -- How do I query the json column?
+
+-- Repopulate into a local variable
+DECLARE @_json2 varchar(8000)
+SELECT @_json2 = json_col
+FROM #json
+WHERE ArbitraryID = 1
+SELECT * FROM OPENJSON(@_json2)
+
+-- Double-FROM ?
+SELECT * FROM 
+	OPENJSON(
+		SELECT json_col 
+		FROM #json
+		WHERE ArbitraryID = 1 )
 
 -- Normal CROSS APPLY
 SELECT t.*

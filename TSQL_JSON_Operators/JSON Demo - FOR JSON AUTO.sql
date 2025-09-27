@@ -38,6 +38,7 @@ FOR JSON AUTO, WITHOUT_ARRAY_WRAPPER
 -- Caution though... any additional columns
 -- will get wrapped-up into the JSON results
 
-SELECT ArbitraryID, JSON_QUERY(LongJson, '$') AS [value]
+SELECT ArbitraryID
+  , JSON_QUERY(LongJson, '$') AS [value]
 FROM [dbo].[BigJsonAsOneRow]
 FOR JSON AUTO, WITHOUT_ARRAY_WRAPPER
