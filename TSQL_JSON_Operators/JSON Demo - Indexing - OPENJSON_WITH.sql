@@ -1,10 +1,8 @@
-USE AdventureWorks
-
--- Turn on "Include Actual Execution Plan" (Cntl + M) 
-
 ------------------------------------ Setup ------------------------------------
 
-IF DB_NAME() != 'AdventureWorks'
+USE AdventureWorks2025
+
+IF DB_NAME() != 'AdventureWorks2025'
   RAISERROR('Scripts will not reliabily run!', 20, 1) WITH LOG;
 
 IF NOT EXISTS (
@@ -23,7 +21,36 @@ IF EXISTS (
 
 --------------------------------- End Setup -----------------------------------
 
+-- Turn on "Display Actual Execution Plans" (Cntl-M)
+
+--Create the JSON index
+
+CREATE JSON INDEX IXJ_PersonJSON_CustomerJson
+ON Person.PersonOrders_JSON(CustomerJson)
+   FOR ('$') -- path is root, so we are covering the contents
+   WITH (DATA_COMPRESSION=PAGE, FILLFACTOR=80, PAD_INDEX=ON);
+
+
+-- Let's locate who ordered SalesOrderNumber SO43793
+
+    SELECT poj.*, JSON_VALUE(Orders.value, '$.SalesOrderNumber')
+    FROM Person.PersonOrders_JSON poj
+      CROSS APPLY OPENJSON(poj.CustomerJson, '$.Orders') AS Orders
+    WHERE JSON_VALUE(Orders.value, '$.SalesOrderNumber') = 'SO43793'
+
+    SELECT poj.*, ord.SalesOrderNumber
+    FROM Person.PersonOrders_JSON AS poj
+      CROSS APPLY OPENJSON(poj.CustomerJson, '$.Orders')
+         WITH (
+            SalesOrderNumber varchar(7) '$.SalesOrderNumber'
+         ) AS ord
+    WHERE ord.SalesOrderNumber = 'SO43793';
+
+
+
+
 -- Let's locate all customers who ever placed an order under $3
+
 SELECT *
 FROM
 (
@@ -51,6 +78,8 @@ WHERE TRY_CONVERT(decimal(18,4), TotalDue) < 3
 -- but our subtree cost went to 3.38, an 85% improvement
 
 
+
+
 -- JSON_VALUE is removed. Change the OPENJSON to an OPENJSON/WITH
 SELECT 
     poj.*,
@@ -67,15 +96,21 @@ WHERE ord.TotalDue < 3;
 
 
 -- But OPENJSON/WITH is not necessarily the answer to everything
+-- Run these statements together with Execution Plans
 
--- By using OPENJSON+WITH, we can use the JSON index.
-SELECT *
-FROM Person.PersonOrders_JSON
-  CROSS APPLY OPENJSON(CustomerJson)
-      WITH (LastName varchar(50) '$.LastName') AS j
-WHERE j.LastName = 'Young';
+    -- OPENJSON+WITH
+    SELECT p.*
+    FROM Person.PersonOrders_JSON p
+      CROSS APPLY OPENJSON(CustomerJson)
+          WITH (LastName varchar(50) '$.LastName') AS j
+    WHERE j.LastName = 'Young';
 
--- but yet this statement is faster without the JSON index
-SELECT *
-FROM Person.PersonOrders_JSON
-WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
+    -- Convert(varchar(max)) + LIKE
+    SELECT *
+    FROM Person.PersonOrders_JSON
+    WHERE Convert(varchar(max), CustomerJson) LIKE '%"LastName":"Young"%'
+
+    -- JSON_VALUE
+    SELECT *
+    FROM Person.PersonOrders_JSON
+    WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'

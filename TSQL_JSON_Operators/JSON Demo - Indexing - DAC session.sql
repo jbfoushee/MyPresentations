@@ -4,7 +4,7 @@
 -- ... or change the current session to a DAC connection.
 -- Issue this:
 
-USE AdventureWorks
+USE AdventureWorks2025
 
 DECLARE @_$internal_object_name varchar(128)
 DECLARE @_$parent_object_schema varchar(128)

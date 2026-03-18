@@ -22,9 +22,12 @@ FROM #json
 -- How do I query the json column?
 
 -- Normal CROSS APPLY
-SELECT t.*
+SELECT t.ArbitraryID AS [t.ArbitraryID]
+	, t.json_col AS [t.json_col]
 	, '|' AS '|'
-	, j.*
+	, j.[key] AS [j.key]
+	, j.[value] AS [j.value]
+	, j.[type] AS [j.type]
 FROM #json t
   CROSS APPLY OPENJSON(t.json_col, '$') j
 
@@ -218,7 +221,7 @@ FROM #json t
 			) j
 
 -- No, because parents is an array.. 
--- Now you could add an index like so...
+-- Now you could add a positional-index like so...
 
 SELECT t.ArbitraryID
 	, t.json_col

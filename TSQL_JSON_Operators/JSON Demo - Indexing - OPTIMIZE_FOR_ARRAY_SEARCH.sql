@@ -137,4 +137,4 @@ ORDER BY SCHEMA_NAME(so.schema_id), so.name, si.[index_id], ~Convert(bit, ic.key
 
 SELECT * FROM [Person].[SalesOrderNumbers_JSON]
 WHERE JSON_CONTAINS(SalesOrderNumbers, 'SO51702', '$.SalesOrderNumber[*]') = 1
--- Subquery cost of 0.017
+-- Subquery cost of 0.018

@@ -3,10 +3,17 @@
 SET NOCOUNT ON;
 -- Need AdventureWorks2025?
 -- Visit https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure
+
+------------------------------------ Setup ------------------------------------
+
 USE AdventureWorks2025
 
 IF DB_NAME() != 'AdventureWorks2025'
   RAISERROR('Scripts will not reliabily run!', 20, 1) WITH LOG;
+
+DROP TABLE IF EXISTS [Person].[PersonOrders_JSON]
+
+--------------------------------- End Setup -----------------------------------
 
 -- Let's merge some data from three tables to generate some JSON data
 -- We will only work with persons with 1/more orders
@@ -18,9 +25,21 @@ IF DB_NAME() != 'AdventureWorks2025'
      Customer               overall order                  line items
 */
 
+-- Original data in hierarchical structure
+SELECT per.BusinessEntityID, per.FirstName, per.LastName
+    , '|' AS '|'
+    , soh.SalesOrderID, soh.SalesOrderNumber, soh.OrderDate, soh.TotalDue
+    , '|' AS '|'
+    , sod.ProductID, sod.OrderQty, sod.UnitPrice
+    , NULLIF(sod.SpecialOfferID, 1) AS SpecialOfferID
+FROM Person.Person per
+  INNER JOIN Sales.SalesOrderHeader soh
+      ON per.BusinessEntityID = soh.CustomerID
+    INNER JOIN Sales.SalesOrderDetail sod
+        ON soh.SalesOrderID = sod.SalesOrderID
+ORDER BY per.BusinessEntityID
 
 -- Create the new "Person.PersonOrders_JSON" table with this statement
-DROP TABLE IF EXISTS [Person].[PersonOrders_JSON]
 CREATE TABLE [Person].[PersonOrders_JSON](
 	[CustomerID] [int] NOT NULL,
 	[CustomerJson] [json] NOT NULL,  --<-- must be JSON to use a JSON INDEX
@@ -47,7 +66,8 @@ SELECT
                         SELECT
                             sod.ProductID,
                             sod.OrderQty,
-                            sod.UnitPrice
+                            sod.UnitPrice,
+                            NULLIF(sod.SpecialOfferID, 1) AS SpecialOfferID
                         FROM Sales.SalesOrderDetail sod
                         WHERE sod.SalesOrderID = soh.SalesOrderID
                         FOR JSON PATH
@@ -89,13 +109,14 @@ ON Person.PersonOrders_JSON(CustomerJson)
    WITH (DATA_COMPRESSION=PAGE, FILLFACTOR=80, PAD_INDEX=ON);
 
 
-
+  
 
 -- Where is this new JSON index documented?
 SELECT index_id, * FROM sys.indexes WHERE type_desc = 'JSON'
 SELECT index_id, * FROM sys.json_indexes sji
 
-SELECT index_id, [object_id], [path] FROM sys.json_index_paths
+SELECT index_id, [object_id], OBJECT_NAME([object_id]), [path] 
+FROM sys.json_index_paths
 
 -- What is the JSON index bound to?
 SELECT si.type_desc AS index_type, si.name AS index_name
@@ -107,7 +128,7 @@ FROM sys.objects so
       ON so.[object_id] = si.[object_id]
 WHERE si.type_desc = 'JSON'
 
--- So if I change the WHERE clause to a index name...
+-- So if I take the same query and change the WHERE clause to a index name...
 SELECT si.type_desc AS index_type, si.name AS index_name
     , '|' AS '|'
     , SCHEMA_NAME(so.schema_id) AS [Schema_Name], so.name AS Table_Name
@@ -124,13 +145,13 @@ SELECT SCHEMA_NAME(sit.schema_id) AS SchemaName, sit.name AS TableName, sit.obje
   , sit.internal_type, sit.internal_type_desc
   , '|' AS '|'
   , CONCAT(SCHEMA_NAME(so.schema_id), '.', so.name) AS 'parent_object_name'
-FROM sys.internal_tables sit
+FROM sys.internal_tables sit  --<-- check out this new table name
   INNER JOIN sys.objects so
       ON sit.parent_object_id = so.[object_id]
 WHERE so.name = 'PersonOrders_JSON'
 
 -- Can I query from it?
-SELECT * FROM sys.json_index_1959678029_1216000
+SELECT * FROM sys.json_index_1895677801_1216000   --< -- use the name from last query
 
 --------------------------------------------------------------------------------------------
 
@@ -139,11 +160,12 @@ SELECT * FROM sys.json_index_1959678029_1216000
 ---------------------------------------------------------------------------------
 
 SELECT * 
-FROM [Person].[PersonOrders_JSON__json_index_1959678029_1216000]
+FROM [Person].[PersonOrders_JSON__json_index_1895677801_1216000]
 ORDER BY posting_1, json_array_index, Len(json_path) -- the ORDER BY really helps explain the data
 
 -- Switch back to presentation for column description
 
+-- An overall summary of all the indexes involved
 SELECT so.object_id
     , CONCAT('[', SCHEMA_NAME(so.schema_id) , '].[', so.name, ']') AS Target_Table
     , so.type_desc

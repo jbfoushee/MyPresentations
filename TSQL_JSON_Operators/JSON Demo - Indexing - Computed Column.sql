@@ -13,7 +13,7 @@ ALTER TABLE [Person].[PersonOrders_JSON]
 PERSISTED
 
 SELECT TOP 100 * FROM [Person].[PersonOrders_JSON]
--- What is its datatype?
+-- What is its datatype? Review Object Explorer.
 
 -- Cntl + M for Execution Plans
 

@@ -43,7 +43,7 @@ AS
                 sod.ProductID, sod.OrderQty, sod.UnitPrice
             FROM Sales.SalesOrderDetail sod
             WHERE sod.SalesOrderID = soh.SalesOrderID  --<-- a new subquery with a WHERE join
-            FOR JSON PATH , WITHOUT_ARRAY_WRAPPER    --<-- FOR JSON PATH keyword
+            FOR JSON PATH --, WITHOUT_ARRAY_WRAPPER    --<-- FOR JSON PATH keyword
            ) AS Products
     FROM Person.Person per
       INNER JOIN Sales.SalesOrderHeader soh
