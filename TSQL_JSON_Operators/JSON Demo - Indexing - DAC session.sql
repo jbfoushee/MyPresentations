@@ -1,7 +1,15 @@
 -- Begin a DAC session...
---     (Click on the button to the right of New Query.
---      Keep the same connection string, but prefix the servername with "ADMIN:")
--- ... or change the current session to a DAC connection.
+--     Need to activate DAC?
+--         Configure SQL Server Configuration Manager. 
+--             Expand SQL Server Network Configuration → Protocols → Enable TCP/IP.
+--             Restart SQL Service
+--         Issue SQL script: EXEC sp_configure 'remote admin connections', 1; RECONFIGURE;
+
+--     Click the "Database Engine Query" button (the button to the right of New Query)
+--         Keep the same connection string, but prefix the servername with "ADMIN:"
+--     or change the current session to a DAC connection:
+--         Go to the _Q_uery menuitem, Connection, Change Connection...
+--             Keep the same connection string, but prefix the servername with "ADMIN:"
 -- Issue this:
 
 USE AdventureWorks2025
@@ -48,4 +56,5 @@ CLOSE MyCursor
 DEALLOCATE MyCursor
 
 -- Don't forget you can only have 1 DAC session globally to this server
+-- (Don't make it the one to SSMS Object Explorer!)
 ---------------------------------------------------------------------------------

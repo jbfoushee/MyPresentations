@@ -1,12 +1,13 @@
 ﻿--https://sqlsunday.com/2025/05/19/json-indexes-first-impressions/
 
-SET NOCOUNT ON;
 -- Need AdventureWorks2025?
 -- Visit https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure
 
 ------------------------------------ Setup ------------------------------------
 
 USE AdventureWorks2025
+
+SET NOCOUNT ON;
 
 IF DB_NAME() != 'AdventureWorks2025'
   RAISERROR('Scripts will not reliabily run!', 20, 1) WITH LOG;
@@ -112,11 +113,12 @@ ON Person.PersonOrders_JSON(CustomerJson)
   
 
 -- Where is this new JSON index documented?
-SELECT index_id, * FROM sys.indexes WHERE type_desc = 'JSON'
-SELECT index_id, * FROM sys.json_indexes sji
+-- Run together:
+        SELECT index_id, * FROM sys.indexes WHERE type_desc = 'JSON'
+        SELECT index_id, * FROM sys.json_indexes sji
 
-SELECT index_id, [object_id], OBJECT_NAME([object_id]), [path] 
-FROM sys.json_index_paths
+        SELECT index_id, [object_id], OBJECT_NAME([object_id]), [path] 
+        FROM sys.json_index_paths
 
 -- What is the JSON index bound to?
 SELECT si.type_desc AS index_type, si.name AS index_name
@@ -140,10 +142,12 @@ WHERE si.name = 'IXJ_PersonJSON_CustomerJson'
 -- A new challenger appears!
 
 -- What properties does this internal table have?
-SELECT SCHEMA_NAME(sit.schema_id) AS SchemaName, sit.name AS TableName, sit.object_id
-  , sit.parent_object_id, sit.type, sit.type_desc, sit.create_date
-  , sit.internal_type, sit.internal_type_desc
+SELECT sit.object_id
+  , CONCAT(SCHEMA_NAME(sit.schema_id), '.', sit.name) AS ObjectName
+  , sit.type, sit.type_desc, sit.create_date
+  , CONCAT(sit.internal_type, ' (', sit.internal_type_desc, ')') AS [internal_type (desc)]
   , '|' AS '|'
+  , sit.parent_object_id
   , CONCAT(SCHEMA_NAME(so.schema_id), '.', so.name) AS 'parent_object_name'
 FROM sys.internal_tables sit  --<-- check out this new table name
   INNER JOIN sys.objects so
