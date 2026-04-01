@@ -2,7 +2,7 @@
 
 USE AdventureWorks2025
 
-SET NOCOUNT ON;
+SET NOCOUNT OFF;
 
 IF DB_NAME() != 'AdventureWorks2025'
   RAISERROR('Scripts will not reliabily run!', 20, 1) WITH LOG;
@@ -22,8 +22,6 @@ IF EXISTS (
   DROP INDEX IXJ_PersonJSON_CustomerJson ON Person.PersonOrders_JSON
 
 
---Clear the proc cache of residue before starting
-DBCC FREEPROCCACHE;
 --------------------------------- End Setup -----------------------------------
 
 
@@ -49,15 +47,19 @@ FROM Person.PersonOrders_JSON
 WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
 -- Two things of note in the Execution Plan:
 -- 1. We introduced a CONVERT_IMPLICIT warning. (What is the datatype being converted?)
+--    However, this is not the reason it went with the Clustered Index Scan.
+--    It is just noise.
 -- 2. I cannot guarantee that it did or did not pick the JSON Index Seek at this point.
 --    Things that encourage the condition we want (which is to NOT use the JSON index)
 --       1. Remove the AdventureWorks2025 database.
 --       2. Restart the MSSQL Service.
 --       3. Restore the AdventureWorks2025 database.
 --       4. Run the CREATE JSON Index script from top to bottom.
---       5. Run the JSON_VALUE script to this line.
+--       5. Run this JSON_VALUE script to this line.
 
 
+
+-- What's the subtree cost of the original statement? (0.576)
 
 
 -- It's not using the JSON index.
@@ -66,9 +68,7 @@ WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
 SELECT *
 FROM Person.PersonOrders_JSON WITH (INDEX(IXJ_PersonJSON_CustomerJson), FORCESEEK)
 WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
--- Review if Subtree cost is better (it's usually not)
-
--- The first time (especially), the indexed version will cost more.
+-- Review if Subtree cost is better (and it's not!? Over 2.0)
 
 -- Run together to compare
     SELECT *
@@ -80,23 +80,7 @@ WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
     WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
 
 
-
--- Run the indexed version with OPTION (OPTIMIZE FOR UNKNOWN)
--- You want both the original and indexed versions to match in cost.
-    SELECT *
-    FROM Person.PersonOrders_JSON
-    WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
-
-    SELECT *
-    FROM Person.PersonOrders_JSON WITH (INDEX(IXJ_PersonJSON_CustomerJson), FORCESEEK)
-    WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
-    OPTION (OPTIMIZE FOR UNKNOWN, RECOMPILE); 
-        -- Ignore the parameter values, use statistics to generate the plan
-        -- Unlike OPTION(RECOMPILE), OFU allows the plan to be cached and reused
-
--- Note the subtree costs of the queries. Now run them individually. What happened?
-
--- Once this occurs, rid the other plans from the cache...
+-- Let's remove all these plans from the cache...
 
     DECLARE @_planhandle varbinary(400)
 
@@ -109,14 +93,37 @@ WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
               CROSS APPLY sys.dm_exec_sql_text(cp.plan_handle) st
               CROSS APPLY sys.dm_exec_query_plan(cp.plan_handle) qp
             WHERE st.text LIKE '%PersonOrders_JSON%'
-              AND st.text NOT LIKE '%sys.dm_exec_cached_plans%'
-              AND Convert(varchar(max), query_plan) LIKE '%JSON Index Seek%'
-
+              
             IF @_planhandle IS NULL
                 BREAK
 
             DBCC FREEPROCCACHE(@_planhandle)
         END
+
+    DROP INDEX IXJ_PersonJSON_CustomerJson ON Person.PersonOrders_JSON
+
+    -- Create our JSON index
+    CREATE JSON INDEX IXJ_PersonJSON_CustomerJson
+    ON Person.PersonOrders_JSON(CustomerJson)
+       FOR ('$') -- path is root, so we are covering the contents
+       WITH (DATA_COMPRESSION=PAGE, FILLFACTOR=80, PAD_INDEX=ON, OPTIMIZE_FOR_ARRAY_SEARCH = ON);
+                                                          --     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                                          -- Add this parameter even if unneeded
+
+-- Run the indexed version with OPTION (OPTIMIZE FOR UNKNOWN)
+-- This will ignore the parameter values, use statistics to generate the plan
+    SELECT *
+    FROM Person.PersonOrders_JSON
+    WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
+
+    SELECT *
+    FROM Person.PersonOrders_JSON WITH (INDEX(IXJ_PersonJSON_CustomerJson), FORCESEEK)
+    WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
+    OPTION (OPTIMIZE FOR UNKNOWN, RECOMPILE)
+
+
+-- Note the subtree costs of the queries. Now run them individually. What happened?
+
 
 -- Let's see how the original statement looks like now:
 
@@ -137,10 +144,13 @@ EXEC sp_recompile 'Person.PersonOrders_JSON';
 ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE;
 DBCC SHOW_STATISTICS ('Person.PersonOrders_JSON','PK_PersonOrders_JSON') WITH HISTOGRAM;
 UPDATE STATISTICS sys.json_index_1895677801_1216000 WITH FULLSCAN; 
-DBCC SHOW_STATISTICS ('sys.json_index_1895677801_1216000','IXJ_PersonJSON_CustomerJson') WITH HISTOGRAM;
+UPDATE STATISTICS sys.json_index_1895677801_1216000 _WA_Sys_00000004_74CE504D WITH FULLSCAN;
+DBCC SHOW_STATISTICS('sys.json_index_1895677801_1216000', '_WA_Sys_00000002_74CE504D')
+DBCC SHOW_STATISTICS('sys.json_index_1895677801_1216000','IXJ_PersonJSON_CustomerJson') WITH HISTOGRAM;
 ALTER INDEX [IXJ_PersonJSON_CustomerJson] ON [Person].[PersonOrders_JSON] REBUILD
 SELECT... FROM... OPTION (RECOMPILE);
 SELECT... FROM... OPTION (OPTIMIZE FOR UNKNOWN);
+OPTION (TABLE HINT( Person.PersonOrders_JSON, FORCESEEK))
 */
 
 
@@ -148,12 +158,6 @@ SELECT *
 FROM Person.PersonOrders_JSON
 WHERE JSON_VALUE(CustomerJson,'$.json_expert') = Convert(bit, 1)
 -- JSON index hits, Subtree cost of 0.006
-
-SELECT *
-FROM Person.PersonOrders_JSON WITH (INDEX(IXJ_PersonJSON_CustomerJson), FORCESEEK)
-WHERE JSON_VALUE(CustomerJson,'$.json_expert') = Convert(bit, 1)
-OPTION (OPTIMIZE FOR UNKNOWN, RECOMPILE); 
-
 
 
 SELECT *
@@ -165,35 +169,10 @@ WHERE JSON_VALUE(CustomerJson,'$.json_expert') = Convert(bit, 1)
 
 
 
--- Even when you force the index, SQL may not want it...
--- Run together:
-
-    SELECT *
-    FROM Person.PersonOrders_JSON
-    WHERE JSON_VALUE(CustomerJson,'$.Orders[1].SalesOrderNumber') = 'SO51421'
-    -- Subtree cost of 0.576; Does not use JSON index
-
-    SELECT *
-    FROM Person.PersonOrders_JSON WITH (FORCESEEK)
-    WHERE JSON_VALUE(CustomerJson,'$.Orders[1].SalesOrderNumber') = 'SO51421'
-    -- Subtree cost of 0.879
-
-    SELECT *
-    FROM Person.PersonOrders_JSON WITH (INDEX(IXJ_PersonJSON_CustomerJson))
-    WHERE JSON_VALUE(CustomerJson,'$.Orders[1].SalesOrderNumber') = 'SO51421'
-    -- Subtree cost of 0.629
-
-    SELECT *
-    FROM Person.PersonOrders_JSON WITH (INDEX(IXJ_PersonJSON_CustomerJson), FORCESEEK)
-    WHERE JSON_VALUE(CustomerJson,'$.Orders[1].SalesOrderNumber') = 'SO51421'
-    OPTION (OPTIMIZE FOR UNKNOWN, RECOMPILE); 
-    -- Subtree cost of 0.879
-
-
 -- Let's search on an integer within the recordset...
-    SELECT *
-    FROM Person.PersonOrders_JSON
-    WHERE CustomerID = 11002
+    --SELECT *
+    --FROM Person.PersonOrders_JSON
+    --WHERE CustomerID = 11002
 
     SELECT * FROM [Person].[PersonOrders_JSON__json_index_1895677801_1216000]
     WHERE posting_1 = 11002
@@ -222,3 +201,35 @@ WHERE JSON_VALUE(CustomerJson,'$.json_expert') = Convert(bit, 1)
     -- Confused? JSON_VALUE returns nvarchar(4000)
     -- JSON index storage type is being forced into nvarchar(4000) by JSON_VALUE.
     -- Converting it again kills the option to use the JSON index
+
+
+-----------------------------------------------------------
+-- More content... skip for time...
+-----------------------------------------------------------
+
+
+-- Even when you force the index, SQL may not want it...
+-- Run together:
+
+    SELECT *
+    FROM Person.PersonOrders_JSON
+    WHERE JSON_VALUE(CustomerJson,'$.Orders[1].SalesOrderNumber') = 'SO51421'
+    -- Subtree cost of 0.576; Does not use JSON index
+
+    SELECT *
+    FROM Person.PersonOrders_JSON WITH (FORCESEEK)
+    WHERE JSON_VALUE(CustomerJson,'$.Orders[1].SalesOrderNumber') = 'SO51421'
+    -- Subtree cost of 0.879
+
+    SELECT *
+    FROM Person.PersonOrders_JSON WITH (INDEX(IXJ_PersonJSON_CustomerJson))
+    WHERE JSON_VALUE(CustomerJson,'$.Orders[1].SalesOrderNumber') = 'SO51421'
+    -- Subtree cost of 0.629
+
+    SELECT *
+    FROM Person.PersonOrders_JSON WITH (INDEX(IXJ_PersonJSON_CustomerJson), FORCESEEK)
+    WHERE JSON_VALUE(CustomerJson,'$.Orders[1].SalesOrderNumber') = 'SO51421'
+    OPTION (OPTIMIZE FOR UNKNOWN, RECOMPILE); 
+    -- Subtree cost of 0.879
+
+

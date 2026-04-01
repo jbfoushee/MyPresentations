@@ -65,7 +65,7 @@ ON Person.SalesOrderNumbers_JSON(SalesOrderNumbers)
    FOR ('$')
    WITH (DATA_COMPRESSION=PAGE);
 
-
+-- Summary of indexes script
 SELECT so.object_id
     , CONCAT('''[', SCHEMA_NAME(so.schema_id) , '].[', so.name, ']') AS Target_Table
     , so.type_desc
@@ -89,15 +89,16 @@ FROM sys.objects so
       ON so.parent_object_id = parent.[object_id]
 WHERE 'SalesOrderNumbers_JSON' IN (parent.name, so.name)
 ORDER BY SCHEMA_NAME(so.schema_id), so.name, si.[index_id], ic.key_ordinal
--- Take a snapshot of the results 
+-- Take a snapshot of the results for reference
 
--- Run the DAC query to see the contents
+-- Run the DAC query to witness a rowcount before OPTIMIZE_FOR_ARRAY_SEARCH
+-- Spoiler alert: Rowcount does not change with OPTIMIZE_FOR_ARRAY_SEARCH
 
 -- Re-run the query
 
 SELECT * FROM [Person].[SalesOrderNumbers_JSON]
 WHERE JSON_CONTAINS(SalesOrderNumbers, 'SO51702', '$.SalesOrderNumber[*]') = 1
--- Subquery cost of 0.147
+-- Subquery cost of 0.147 (50% savings), because I added a JSON index
 
 
 -- Rebuild the JSON index for OPTIMIZE_FOR_ARRAY_SEARCH
@@ -108,7 +109,14 @@ ON Person.SalesOrderNumbers_JSON(SalesOrderNumbers)
          , OPTIMIZE_FOR_ARRAY_SEARCH = ON);
             -- ^^^^^^^^^^^^^^^^^^^
 
--- See that the optimize_for_array_search flag is now 1
+-- Let's re-run the query now
+
+SELECT * FROM [Person].[SalesOrderNumbers_JSON]
+WHERE JSON_CONTAINS(SalesOrderNumbers, 'SO51702', '$.SalesOrderNumber[*]') = 1
+-- Subquery cost of 0.018 (90%+ savings from original) from adding OPTIMIZE_FOR_ARRAY_SEARCH
+
+
+-- In our Index Summary query, see that the optimize_for_array_search flag is now 1
 SELECT so.object_id
     , CONCAT('[', SCHEMA_NAME(so.schema_id) , '].[', so.name, ']') AS Target_Table
     , so.type_desc
@@ -133,8 +141,50 @@ FROM sys.objects so
 WHERE 'SalesOrderNumbers_JSON' IN (parent.name, so.name)
 ORDER BY SCHEMA_NAME(so.schema_id), so.name, si.[index_id], ~Convert(bit, ic.key_ordinal)
 
--- Run the DAC query to see the contents
 
-SELECT * FROM [Person].[SalesOrderNumbers_JSON]
-WHERE JSON_CONTAINS(SalesOrderNumbers, 'SO51702', '$.SalesOrderNumber[*]') = 1
--- Subquery cost of 0.018
+-- Run the DAC query to witness a rowcount after OPTIMIZE_FOR_ARRAY_SEARCH
+-- Spoiler alert: Rowcount does not change with OPTIMIZE_FOR_ARRAY_SEARCH
+
+-----------------------------------------------------------
+-- More content; Skip for time...
+-----------------------------------------------------------
+
+
+-- Bonus content: You may have noticed usage of JSON_QUERY + CONCAT + STRING_AGG 
+-- to build a different style of array. Compare these two SQL statements:
+
+/* 
+SELECT 
+    p.BusinessEntityID AS CustomerID,
+    (
+        SELECT soh.SalesOrderNumber
+        FROM Sales.SalesOrderHeader AS soh
+        WHERE soh.CustomerID = c.CustomerID
+        FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+    ) AS SalesOrderNumbers
+FROM Person.Person AS p
+  INNER JOIN Sales.Customer AS c
+      ON p.BusinessEntityID = c.PersonID
+
+SELECT 
+    p.BusinessEntityID AS CustomerID,
+    (
+        SELECT  
+            JSON_QUERY(
+                CONCAT(
+                    '['
+                    , STRING_AGG(
+                        CONCAT('"', soh.SalesOrderNumber, '"'),
+                        ',')
+                    ,']'
+                )
+            ) AS [SalesOrderNumber]
+        FROM Sales.SalesOrderHeader AS soh
+        WHERE soh.CustomerID = c.CustomerID
+        FOR JSON PATH, WITHOUT_ARRAY_WRAPPER
+    ) AS SalesOrderNumbers
+FROM Person.Person AS p
+  INNER JOIN Sales.Customer AS c
+      ON p.BusinessEntityID = c.PersonID
+
+*/

@@ -1,9 +1,9 @@
-﻿--https://sqlsunday.com/2025/05/19/json-indexes-first-impressions/
-
--- Need AdventureWorks2025?
+﻿-- Need AdventureWorks2025?
 -- Visit https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure
 
 ------------------------------------ Setup ------------------------------------
+
+-- Turn on ZoomIt !
 
 USE AdventureWorks2025
 
@@ -88,6 +88,8 @@ WHERE EXISTS
 -- Review the JSON data.
 SELECT TOP 10 * 
 FROM [Person].[PersonOrders_JSON]
+WHERE JSON_PATH_EXISTS(CustomerJson, '$.Orders[*].OrderDetails[1]') = 1
+  OR JSON_PATH_EXISTS(CustomerJson, '$.Orders[1]') = 1
 ORDER BY NEWID()
 -- We have three high-level properties: a first- and last name, and an Orders array
 -- Within the Orders array are order objects with some properties and an OrderDetails array
@@ -119,40 +121,43 @@ ON Person.PersonOrders_JSON(CustomerJson)
 
         SELECT index_id, [object_id], OBJECT_NAME([object_id]), [path] 
         FROM sys.json_index_paths
+-- Right now, this is the only way you can see this info. 
+-- SSMS enumerates the index, but does not allow scripting or viewing properties
+
 
 -- What is the JSON index bound to?
-SELECT si.type_desc AS index_type, si.name AS index_name
+SELECT si.[type_desc] AS index_type, si.[name] AS index_name
     , '|' AS '|'
-    , SCHEMA_NAME(so.schema_id) AS [Schema_Name], so.name AS Table_Name
-    , so.[object_id], so.type, so.type_desc
+    , SCHEMA_NAME(so.schema_id) AS [Schema_Name], so.[name] AS Table_Name
+    , so.[object_id], so.[type], so.[type_desc]
 FROM sys.objects so
   INNER JOIN sys.indexes si
       ON so.[object_id] = si.[object_id]
-WHERE si.type_desc = 'JSON'
+WHERE si.[type_desc] = 'JSON'
 
 -- So if I take the same query and change the WHERE clause to a index name...
-SELECT si.type_desc AS index_type, si.name AS index_name
+SELECT si.[type_desc] AS index_type, si.[name] AS index_name
     , '|' AS '|'
-    , SCHEMA_NAME(so.schema_id) AS [Schema_Name], so.name AS Table_Name
-    , so.[object_id], so.type, so.type_desc , si.type_desc
+    , SCHEMA_NAME(so.schema_id) AS [Schema_Name], so.[name] AS Table_Name
+    , so.[object_id], so.[type], so.[type_desc] , si.[type_desc]
 FROM sys.objects so
   INNER JOIN sys.indexes si
       ON so.[object_id] = si.[object_id]
-WHERE si.name = 'IXJ_PersonJSON_CustomerJson'
+WHERE si.[name] = 'IXJ_PersonJSON_CustomerJson'   --<-- this line changed
 -- A new challenger appears!
 
 -- What properties does this internal table have?
 SELECT sit.object_id
-  , CONCAT(SCHEMA_NAME(sit.schema_id), '.', sit.name) AS ObjectName
-  , sit.type, sit.type_desc, sit.create_date
+  , CONCAT(SCHEMA_NAME(sit.schema_id), '.', sit.[name]) AS ObjectName
+  , sit.[type], sit.[type_desc], sit.create_date
   , CONCAT(sit.internal_type, ' (', sit.internal_type_desc, ')') AS [internal_type (desc)]
   , '|' AS '|'
   , sit.parent_object_id
-  , CONCAT(SCHEMA_NAME(so.schema_id), '.', so.name) AS 'parent_object_name'
+  , CONCAT(SCHEMA_NAME(so.schema_id), '.', so.[name]) AS 'parent_object_name'
 FROM sys.internal_tables sit  --<-- check out this new table name
   INNER JOIN sys.objects so
       ON sit.parent_object_id = so.[object_id]
-WHERE so.name = 'PersonOrders_JSON'
+WHERE so.[name] = 'PersonOrders_JSON'
 
 -- Can I query from it?
 SELECT * FROM sys.json_index_1895677801_1216000   --< -- use the name from last query
@@ -171,12 +176,12 @@ ORDER BY posting_1, json_array_index, Len(json_path) -- the ORDER BY really help
 
 -- An overall summary of all the indexes involved
 SELECT so.object_id
-    , CONCAT('[', SCHEMA_NAME(so.schema_id) , '].[', so.name, ']') AS Target_Table
-    , so.type_desc
+    , CONCAT('[', SCHEMA_NAME(so.schema_id) , '].[', so.[name], ']') AS Target_Table
+    , so.[type_desc]
     , '|' AS '|'
-    , si.[index_id], si.name AS Index_Name, si.type_desc AS Index_Type, ji.optimize_for_array_search
+    , si.[index_id], si.[name] AS Index_Name, si.[type_desc] AS Index_Type, ji.optimize_for_array_search
     , '|' AS '|'
-    , ic.index_id, ic.key_ordinal, c.name AS column_name
+    , ic.index_id, ic.key_ordinal, c.[name] AS column_name
 FROM sys.objects so
   INNER JOIN sys.indexes si
       ON so.object_id = si.object_id
@@ -188,8 +193,8 @@ FROM sys.objects so
           AND ic.column_id = c.column_id
   LEFT JOIN sys.json_indexes ji
       ON si.[object_id] = ji.[object_id]
-      AND si.type_desc = 'JSON'
+      AND si.[type_desc] = 'JSON'
   LEFT JOIN sys.objects parent
       ON so.parent_object_id = parent.[object_id]
-WHERE 'PersonOrders_Json' IN (parent.name, so.name)
-ORDER BY SCHEMA_NAME(so.schema_id), so.name, si.[index_id], ~Convert(bit, ic.key_ordinal)
+WHERE 'PersonOrders_Json' IN (parent.[name], so.[name])
+ORDER BY SCHEMA_NAME(so.schema_id), so.[name], si.[index_id], ~Convert(bit, ic.key_ordinal)

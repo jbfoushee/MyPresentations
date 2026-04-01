@@ -1,16 +1,20 @@
--- Begin a DAC session...
---     Need to activate DAC?
+-- 1. Begin a DAC session...
+--     Setup: Need to activate DAC?
 --         Configure SQL Server Configuration Manager. 
 --             Expand SQL Server Network Configuration → Protocols → Enable TCP/IP.
 --             Restart SQL Service
 --         Issue SQL script: EXEC sp_configure 'remote admin connections', 1; RECONFIGURE;
 
---     Click the "Database Engine Query" button (the button to the right of New Query)
+--     1a. Click the "Database Engine Query" button (the button to the right of New Query)
 --         Keep the same connection string, but prefix the servername with "ADMIN:"
---     or change the current session to a DAC connection:
---         Go to the _Q_uery menuitem, Connection, Change Connection...
+--     1b. Or change the current session to a DAC connection:
+--         Go to the [Q]uery menuitem, Connection, Change Connection...
 --             Keep the same connection string, but prefix the servername with "ADMIN:"
--- Issue this:
+
+--   Don't forget you can only have 1 DAC session globally to this server
+--   (Don't accidentally make it the one to SSMS Object Explorer!)
+
+-- 2. Issue this:
 
 USE AdventureWorks2025
 
@@ -19,9 +23,9 @@ DECLARE @_$parent_object_schema varchar(128)
 DECLARE @_$parent_object_name varchar(128)
 
 DECLARE MyCursor CURSOR FOR
-    SELECT sit.name AS internal_object_name
-      , SCHEMA_NAME(so.schema_id) AS parent_object_schema
-      , so.name AS parent_object_name
+    SELECT sit.[name] AS internal_object_name
+      , SCHEMA_NAME(so.[schema_id]) AS parent_object_schema
+      , so.[name] AS parent_object_name
     FROM sys.internal_tables sit
       INNER JOIN sys.objects so
           ON sit.parent_object_id = so.[object_id]
@@ -55,6 +59,5 @@ END
 CLOSE MyCursor
 DEALLOCATE MyCursor
 
--- Don't forget you can only have 1 DAC session globally to this server
--- (Don't make it the one to SSMS Object Explorer!)
+-- Exit the DAC session once complete
 ---------------------------------------------------------------------------------

@@ -32,6 +32,7 @@ ON Person.PersonOrders_JSON(CustomerJson)
 
 
 -- Let's locate who ordered SalesOrderNumber SO43793
+-- Run together:
 
     SELECT poj.*, JSON_VALUE(Orders.value, '$.SalesOrderNumber')
     FROM Person.PersonOrders_JSON poj
@@ -96,7 +97,7 @@ WHERE ord.TotalDue < 3;
 
 
 -- But OPENJSON/WITH is not necessarily the answer to everything
--- Run these statements together with Execution Plans
+-- Run these statements together with Execution Plans:
 
     -- OPENJSON+WITH
     SELECT p.*
