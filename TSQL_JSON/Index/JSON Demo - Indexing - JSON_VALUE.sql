@@ -59,6 +59,13 @@ WHERE JSON_VALUE(CustomerJson,'$.json_expert') = Convert(bit, 1)
 -- JSON index hits twice, Subtree cost of 0.013
 
 
+-- and side note: the json_expert clause by itself works fine:
+SELECT *
+FROM Person.PersonOrders_JSON
+WHERE JSON_VALUE(CustomerJson,'$.json_expert') = Convert(bit, 1)
+-- JSON index hits, Subtree cost of 0.006
+
+
 -- What's the subtree cost of the original statement? (0.576)
 SELECT *
 FROM Person.PersonOrders_JSON
@@ -74,7 +81,8 @@ FROM Person.PersonOrders_JSON WITH (INDEX(IXJ_PersonJSON_CustomerJson), FORCESEE
 WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
 -- Review if Subtree cost is better (and it's not!? Over 2.0)
 
--- Run together to compare
+-- Run together for workload comparison
+-- Screen-shot the plan and workload ratios
     SELECT *
     FROM Person.PersonOrders_JSON
     WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
@@ -84,7 +92,7 @@ WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
     WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
 
 
--- "Aggitate" the plan store by querying every unique customer
+-- "Aggitate" the plan store by taking those two queries against every unique customer
     SELECT DISTINCT 
     CONCAT(
         'SELECT * FROM Person.PersonOrders_JSON
@@ -96,13 +104,14 @@ WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
     FROM Person.PersonOrders_JSON
 -- Take this new script and run in a new window
 
--- Run this statement in tandem with the aggitation script:
+-- Run this statement in tandem with the agitation script:
 SELECT *
 FROM Person.PersonOrders_JSON
 WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
--- It should change while the aggitation script runs.
+-- It should change while the agitation script runs.
 
--- If the aggitation script finishes and no change, switch the parameter:
+-- If the agitation script finishes and no change, parameter sniffing may have occurred
+-- Switch the parameter:
 SELECT *
 FROM Person.PersonOrders_JSON
 WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Zhu'
@@ -113,11 +122,20 @@ WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
 -- Subtree cost of 0.296
 
 
-SELECT *
-FROM Person.PersonOrders_JSON
-WHERE JSON_VALUE(CustomerJson,'$.json_expert') = Convert(bit, 1)
--- JSON index hits, Subtree cost of 0.006
+-- How do the oroginal and FORCESEEK statements compare now?
+-- Run together and compare with screenshot
+    SELECT *
+    FROM Person.PersonOrders_JSON
+    WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
 
+    SELECT *
+    FROM Person.PersonOrders_JSON WITH (INDEX(IXJ_PersonJSON_CustomerJson), FORCESEEK)
+    WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
+
+
+
+
+-- New example:
 
 -- Let's search on an integer within the recordset...
     --SELECT *
@@ -131,19 +149,19 @@ WHERE JSON_VALUE(CustomerJson,'$.json_expert') = Convert(bit, 1)
 -- Which of these statements will run the fastest? Which the slowest?
 -- Note: You will get different results between SQL 2025 RTM and CU3
 
-    SELECT *
+    SELECT @@VERSION, *
+    FROM Person.PersonOrders_JSON
+    WHERE JSON_VALUE(CustomerJson,'$.Orders[2].SalesOrderID') = '53237'
+    
+    SELECT @@VERSION, *
     FROM Person.PersonOrders_JSON
     WHERE JSON_VALUE(CustomerJson,'$.Orders[2].SalesOrderID') = 53237
  
-    SELECT *
+    SELECT @@VERSION, *
     FROM Person.PersonOrders_JSON
     WHERE Convert(int, JSON_VALUE(CustomerJson,'$.Orders[2].SalesOrderID')) = 53237
-    
-    SELECT *
-    FROM Person.PersonOrders_JSON
-    WHERE JSON_VALUE(CustomerJson,'$.Orders[2].SalesOrderID') = '53237'
 
-    SELECT *
+    SELECT @@VERSION, *
     FROM Person.PersonOrders_JSON
     WHERE JSON_VALUE(CustomerJson,'$.Orders[2].SalesOrderID' RETURNING int) = 53237
  

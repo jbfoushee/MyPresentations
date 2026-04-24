@@ -60,3 +60,12 @@ WHERE JSON_CONTAINS(CustomerJson, 870 ,'$.Orders[*].OrderDetails[*].ProductID') 
 -- Even WITH (FORCESEEK), SQL Server says "No thanks"
 
 --------------------------------------------------------------------------------
+
+
+SELECT *
+FROM Person.PersonOrders_JSON
+WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
+
+SELECT *
+FROM Person.PersonOrders_JSON
+WHERE JSON_CONTAINS(CustomerJson, 'Young' ,'$.LastName') = 1
