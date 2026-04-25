@@ -62,6 +62,8 @@ WHERE JSON_CONTAINS(CustomerJson, 870 ,'$.Orders[*].OrderDetails[*].ProductID') 
 --------------------------------------------------------------------------------
 
 
+-- JSON_CONTAINS vs JSON_VALUE
+
 SELECT *
 FROM Person.PersonOrders_JSON
 WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
