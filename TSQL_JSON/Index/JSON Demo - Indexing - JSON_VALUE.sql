@@ -149,6 +149,8 @@ WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
 -- Which of these statements will run the fastest? Which the slowest?
 -- Note: You will get different results between SQL 2025 RTM and CU3
 
+    USE AdventureWorks2025
+
     SELECT @@VERSION, *
     FROM Person.PersonOrders_JSON
     WHERE JSON_VALUE(CustomerJson,'$.Orders[2].SalesOrderID') = '53237'

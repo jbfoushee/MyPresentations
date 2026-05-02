@@ -157,6 +157,8 @@ SELECT * FROM sys.json_index_1895677801_1216000   --< -- use the name from last 
 
 ---------------------------------------------------------------------------------
 
+-- Show SSMS report of table sizes
+
 SELECT * 
 FROM [Person].[PersonOrders_JSON__json_index_1895677801_1216000]
 ORDER BY posting_1, json_array_index, Len(json_path) -- the ORDER BY really helps explain the data
