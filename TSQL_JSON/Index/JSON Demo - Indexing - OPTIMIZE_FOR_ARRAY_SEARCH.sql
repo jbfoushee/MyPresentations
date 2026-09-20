@@ -4,15 +4,12 @@
  ┌---------------┐     ┌------------------------┐
  | Person.Person |--01<| Sales.SalesOrderHeader |
  └---------------┘     └------------------------┘
-*/
-
 -------------------------------------------------------------------------------------------------
-
 -- I want one row per customer, 
 --      with JSON content of all the customer orders in an array
 
 -------------------------------------------------------------------------------------------------
-
+*/
 
 -- Create a table to store our JSON
 
@@ -64,15 +61,13 @@ CREATE JSON INDEX IXJ_SOHJSON_SalesOrderNumbers
 ON Person.SalesOrderNumbers_JSON(SalesOrderNumbers)
    FOR ('$')
 
-
 -- Re-run the query
 
 SELECT * FROM [Person].[SalesOrderNumbers_JSON]
 WHERE JSON_CONTAINS(SalesOrderNumbers, 'SO51702', '$.SalesOrderNumber[*]') = 1
--- Subquery cost of 0.147 (50% savings), because I added a JSON index
--- (If you look at the Execution Plan, it is a Clustered Index Scan on the sys.json_index table)
+-- It did nothing. Subquery cost is still 0.229
 
--- Rebuild the JSON index for OPTIMIZE_FOR_ARRAY_SEARCH
+-- Rebuild the same JSON index, but with OPTIMIZE_FOR_ARRAY_SEARCH
 DROP INDEX IXJ_SOHJSON_SalesOrderNumbers ON Person.SalesOrderNumbers_JSON
 CREATE JSON INDEX IXJ_SOHJSON_SalesOrderNumbers
 ON Person.SalesOrderNumbers_JSON(SalesOrderNumbers)
@@ -85,7 +80,7 @@ ON Person.SalesOrderNumbers_JSON(SalesOrderNumbers)
 SELECT * FROM [Person].[SalesOrderNumbers_JSON]
 WHERE JSON_CONTAINS(SalesOrderNumbers, 'SO51702', '$.SalesOrderNumber[*]') = 1
 -- Subquery cost of 0.018 (90%+ savings from original) from adding OPTIMIZE_FOR_ARRAY_SEARCH
-
+--                    ^
 
 -- In our Index Summary query, see that the optimize_for_array_search flag is now 1
 SELECT * FROM sys.json_indexes ji

@@ -5,6 +5,7 @@
 
 -- 1. Begin a DAC session...
 --     Setup: Need to activate DAC?
+--         Ensure SQL Browser service is running for a named instance-based DAC.
 --         Configure SQL Server Configuration Manager. 
 --             Expand SQL Server Network Configuration → Protocols → Enable TCP/IP.
 --             Restart SQL Service

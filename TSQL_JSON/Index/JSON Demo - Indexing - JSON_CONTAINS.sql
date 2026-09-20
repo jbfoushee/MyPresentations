@@ -48,8 +48,7 @@ ON Person.PersonOrders_JSON(CustomerJson)
 SELECT *
 FROM Person.PersonOrders_JSON
 WHERE JSON_CONTAINS(CustomerJson, 965 ,'$.Orders[*].OrderDetails[*].ProductID') = 1
--- The JSON index hits, and the subtree cost goes down to 0.156
--- This is a 60% improvement from the original
+-- The JSON index hits, and the subtree cost goes down
 
 
 SELECT *
@@ -62,12 +61,12 @@ WHERE JSON_CONTAINS(CustomerJson, 870 ,'$.Orders[*].OrderDetails[*].ProductID') 
 --------------------------------------------------------------------------------
 
 
--- JSON_CONTAINS vs JSON_VALUE
+-- JSON_VALUE vs JSON_CONTAINS
+-- run together:
+    SELECT *
+    FROM Person.PersonOrders_JSON
+    WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
 
-SELECT *
-FROM Person.PersonOrders_JSON
-WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
-
-SELECT *
-FROM Person.PersonOrders_JSON
-WHERE JSON_CONTAINS(CustomerJson, 'Young' ,'$.LastName') = 1
+    SELECT *
+    FROM Person.PersonOrders_JSON
+    WHERE JSON_CONTAINS(CustomerJson, 'Young' ,'$.LastName') = 1

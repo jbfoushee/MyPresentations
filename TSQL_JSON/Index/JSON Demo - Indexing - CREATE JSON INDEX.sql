@@ -38,7 +38,7 @@ FROM Person.Person per
       ON per.BusinessEntityID = soh.CustomerID
     INNER JOIN Sales.SalesOrderDetail sod
         ON soh.SalesOrderID = sod.SalesOrderID
-ORDER BY per.BusinessEntityID
+ORDER BY per.BusinessEntityID, soh.SalesOrderID, sod.ProductID
 
 -- Create the new "Person.PersonOrders_JSON" table with this statement
 CREATE TABLE [Person].[PersonOrders_JSON](
@@ -90,7 +90,7 @@ SELECT TOP 10 *
 FROM [Person].[PersonOrders_JSON]
 WHERE JSON_PATH_EXISTS(CustomerJson, '$.Orders[*].OrderDetails[1]') = 1
   OR JSON_PATH_EXISTS(CustomerJson, '$.Orders[1]') = 1
-ORDER BY NEWID()
+ORDER BY NEWID() -- randomize which results to show
 -- We have three high-level properties: a first- and last name, and an Orders array
 -- Within the Orders array are order objects with some properties and an OrderDetails array
 -- Within the OrderDetails array are some product objects with some properties
@@ -158,6 +158,10 @@ SELECT * FROM sys.json_index_1895677801_1216000   --< -- use the name from last 
 ---------------------------------------------------------------------------------
 
 -- Show SSMS report of table sizes
+-- Reports, Standard Reports, Disk Usage by Top Tables
+-- (The index size of Person.PersonOrders_JSON seems quite small?)
+-- (The table size of Person.PersonOrders_JSON__json_index_1895677801_1216000
+--  seems quite big?)
 
 SELECT * 
 FROM [Person].[PersonOrders_JSON__json_index_1895677801_1216000]

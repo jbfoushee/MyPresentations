@@ -81,17 +81,6 @@ FROM Person.PersonOrders_JSON WITH (INDEX(IXJ_PersonJSON_CustomerJson), FORCESEE
 WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
 -- Review if Subtree cost is better (and it's not!? Over 2.0)
 
--- Run together for workload comparison
--- Screen-shot the plan and workload ratios
-    SELECT *
-    FROM Person.PersonOrders_JSON
-    WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
-
-    SELECT *
-    FROM Person.PersonOrders_JSON WITH (INDEX(IXJ_PersonJSON_CustomerJson), FORCESEEK)
-    WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
-
-
 -- "Aggitate" the plan store by taking those two queries against every unique customer
     SELECT DISTINCT 
     CONCAT(
@@ -119,6 +108,7 @@ WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Zhu'
 SELECT *
 FROM Person.PersonOrders_JSON
 WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
+
 -- Subtree cost of 0.296
 
 
@@ -147,7 +137,7 @@ WHERE JSON_VALUE(CustomerJson,'$.LastName') = 'Young'
     ORDER BY posting_1, json_path, LEN(json_array_index), json_array_index
 
 -- Which of these statements will run the fastest? Which the slowest?
--- Note: You will get different results between SQL 2025 RTM and CU3
+-- Note: You will get different results between SQL 2025 RTM and CU3+
 
     USE AdventureWorks2025
 
